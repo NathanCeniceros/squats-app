@@ -147,7 +147,7 @@ class TestSquatsApp(unittest.TestCase):
 
     @timeout(5)
     @patch("src.reminders.threading.Timer", autospec=True)
-    def test_schedule_next_reminder_logic(self, mock_timer):
+    def test_schedule_next_reminder_with_timer(self, mock_timer):
         mock_timer_instance = mock_timer.return_value
         schedule_next_reminder(5, mock_timer=mock_timer)
         mock_timer.assert_called_once_with(5, popup)  # Verify timer is initialized with correct delay and function
