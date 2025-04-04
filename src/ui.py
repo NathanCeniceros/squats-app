@@ -35,7 +35,7 @@ def update_current_time():
     current_time_label.config(text=f"Current Time: {now}")
     root.after(1000, update_current_time)
 
-def update_time_slots_list(date, mock_style=None):
+def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
     if date not in tracker_data:
         print(f"Warning: No data found for date {date}.")
         return
@@ -49,7 +49,8 @@ def update_time_slots_list(date, mock_style=None):
     style.configure("Missed.TButton", foreground="#990000")
     style.configure("Current.TButton", foreground="#3333FF", font=("Helvetica", 10, "bold"))
 
-    for widget in time_slots_frame.winfo_children():
+    frame = mock_time_slots_frame or time_slots_frame  # Use mock frame if provided
+    for widget in frame.winfo_children():
         widget.destroy()
 
     for index, slot_completed in enumerate(tracker_data[date]):
@@ -73,7 +74,7 @@ def update_time_slots_list(date, mock_style=None):
             status = "⏳"
 
         button = ttk.Button(
-            time_slots_frame,
+            frame,
             text=f"{slot} {status}",
             command=lambda idx=index: mark_as_completed(date, idx),
             style=button_style
