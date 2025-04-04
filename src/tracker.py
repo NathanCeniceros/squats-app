@@ -73,16 +73,11 @@ def mark_as_completed(date, slot_index):
         print(f"Error: Slot index {slot_index} is out of range.")
         return
 
-    print(f"Before modification - Date: {date}, Slot index: {slot_index}")
-    print(f"Tracker Data: {tracker_data}")
-
     tracker_data[date][slot_index] = not tracker_data[date][slot_index]  # Toggle completion status
     action = "completed" if tracker_data[date][slot_index] else "undid"
     log_message(f"User {action} squats for {time_slots[slot_index]} on {date}.")
 
     save_tracker()  # Save changes to the tracker file
-
-    print(f"After modification - Tracker Data: {tracker_data}")
 
 # Function to save tracker data to a JSON file
 def save_tracker():

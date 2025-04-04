@@ -175,6 +175,51 @@ class TestSquatsApp(unittest.TestCase):
             text="Way to go! You completed your squats for today!", foreground="#006600"
         )
 
+    @patch("src.ui.ttk.Style", create=True)
+    @patch("src.ui.time_slots_frame", create=True)
+    @patch("src.ui.progress_label", create=True)
+    @patch("src.ui.status_label", create=True)
+    @patch("src.ui.progress_bar", create=True)
+    def test_schedule_next_reminder_logic(self, mock_progress_bar, mock_status_label, mock_progress_label, mock_time_slots_frame, mock_style):
+        test_date = "2025-04-04"
+        tracker_data[test_date] = [True] * len(time_slots)  # Mock all slots as completed
+
+        mock_progress_label.config = Mock()
+        mock_status_label.config = Mock()
+        mock_progress_bar.config = Mock()
+        mock_style.configure = Mock()
+        mock_time_slots_frame.winfo_children = Mock(return_value=[])
+
+        update_calendar(test_date, mock_progress_label, mock_status_label, mock_progress_bar)
+        mock_status_label.config.assert_called_once_with(
+            text="Way to go! You completed your squats for today!", foreground="#006600"
+        )
+
+    @timeout(5)
+    def test_mark_as_completed(self):
+        test_date = "2025-04-04"
+        tracker_data[test_date] = [False, False, False]  # Mock tracker data
+        mark_as_completed(test_date, 0)
+        self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
+
+    @patch("src.ui.ttk.Style", create=True)
+    @patch("src.ui.time_slots_frame", create=True)
+    @patch("src.ui.progress_label", create=True)
+    @patch("src.ui.status_label", create=True)
+    @patch("src.ui.progress_bar", create=True)
+    def test_update_calendar(self, mock_progress_bar, mock_status_label, mock_progress_label, mock_time_slots_frame, mock_style):
+        test_date = "2025-04-04"
+        tracker_data[test_date] = [True, False, False]  # Mock tracker data with incomplete progress
+
+        mock_progress_label.config = Mock()
+        mock_status_label.config = Mock()
+        mock_progress_bar.config = Mock()
+        mock_style.configure = Mock()
+        mock_time_slots_frame.winfo_children = Mock(return_value=[])
+
+        update_calendar(test_date, mock_progress_label, mock_status_label, mock_progress_bar)
+        mock_status_label.config.assert_called_once_with(text="Keep going!", foreground="#333")
+
 
 if __name__ == "__main__":
     unittest.main()
