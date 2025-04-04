@@ -13,8 +13,26 @@ def popup():
     reminder_window.geometry("300x150")
     reminder_window.configure(bg="#fff0e0")
 
-    label = ttk.Label(reminder_window, text="Time to take a break and do some squats!", font=("Helvetica", 12), wraplength=250)
+    label = ttk.Label(
+        reminder_window, 
+        text="Time to take a break and do some squats!", 
+        font=("Helvetica", 12), 
+        wraplength=250
+    )
     label.pack(pady=20)
+
+    # Add a fun animation effect
+    def bounce_window():
+        for i in range(5):
+            reminder_window.geometry(f"300x{150 + i * 5}")
+            reminder_window.update_idletasks()
+            reminder_window.after(50)
+        for i in range(5):
+            reminder_window.geometry(f"300x{175 - i * 5}")
+            reminder_window.update_idletasks()
+            reminder_window.after(50)
+
+    bounce_window()
 
     ok_button = ttk.Button(reminder_window, text="OK", command=reminder_window.destroy)
     ok_button.pack(pady=10)
@@ -37,8 +55,20 @@ def show_congratulatory_message():
 
     message = random.choice(messages)
 
-    label = ttk.Label(congrats_window, text=message, font=("Helvetica", 14, "bold"), foreground="#006600", wraplength=250)
+    label = ttk.Label(
+        congrats_window, 
+        text=message, 
+        font=("Helvetica", 14, "bold"), 
+        foreground="#006600", 
+        wraplength=250
+    )
     label.pack(pady=20)
+
+    # Add auto-sizing for better appearance
+    congrats_window.update_idletasks()
+    width = congrats_window.winfo_reqwidth()
+    height = congrats_window.winfo_reqheight()
+    congrats_window.geometry(f"{width}x{height}")
 
     ok_button = ttk.Button(congrats_window, text="OK", command=congrats_window.destroy)
     ok_button.pack(pady=10)

@@ -1,9 +1,9 @@
 import os
+import json
 from datetime import datetime, timedelta
 
 # Constants
-LOG_FILE = "squats_log.txt"
-TRACKER_FILE = "squats_tracker.txt"
+TRACKER_FILE = "squats_tracker.json"
 time_slots = [
     "8:00 AM", "8:45 AM", "9:30 AM", "10:15 AM", "11:00 AM", "11:45 AM",
     "12:30 PM", "1:15 PM", "2:00 PM", "2:45 PM", "3:30 PM", "4:15 PM", "5:00 PM"
@@ -11,15 +11,22 @@ time_slots = [
 tracker_data = {}
 
 # Function to initialize tracker
-def initialize_tracker():
+def initialize_tracker(start_date=None):
+    """
+    Initializes the tracker data for the current week or a given start_date.
+    """
     global tracker_data
-    today = datetime.now().date()
-    start_of_week = today - timedelta(days=today.weekday())
+    if start_date is None:
+        today = datetime.now().date()
+        start_date = today - timedelta(days=today.weekday())
+    else:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+
     tracker_data = {
-        (start_of_week + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
+        (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
         for i in range(7)
     }
-    print("Initialized tracker data:", tracker_data)
+    print(f"Initialized tracker data starting from {start_date}: {tracker_data}")
 
 # Function to log messages to a file
 def log_message(message):
@@ -39,16 +46,29 @@ def update_progress(date, slot_index):
     """
     Updates the progress for a specific time slot on the given date.
     """
-    if date in tracker_data and 0 <= slot_index < len(time_slots):
-        tracker_data[date][slot_index] = True  # Mark the slot as completed
-        print(f"Updated progress for {date}, slot {slot_index}: {tracker_data[date]}")
-        save_tracker()  # Save progress to the tracker file
+    if date not in tracker_data:
+        print(f"Error: Date {date} is not in the tracker data.")
+        return
+    if not (0 <= slot_index < len(time_slots)):
+        print(f"Error: Slot index {slot_index} is out of range.")
+        return
+
+    tracker_data[date][slot_index] = True  # Mark the slot as completed
+    log_message(f"Progress updated for {date}, slot {slot_index}.")
+    save_tracker()
 
 # Function to toggle completion status for a time slot
 def mark_as_completed(date, slot_index):
     """
     Toggles the completion status of a specific time slot for the given date.
     """
+    if date not in tracker_data:
+        print(f"Error: Date {date} is not in the tracker data.")
+        return
+    if not (0 <= slot_index < len(time_slots)):
+        print(f"Error: Slot index {slot_index} is out of range.")
+        return
+
     print(f"Before modification - Date: {date}, Slot index: {slot_index}")
     print(f"Tracker Data: {tracker_data}")
     
@@ -64,37 +84,54 @@ def mark_as_completed(date, slot_index):
     
     print(f"After modification - Tracker Data: {tracker_data}")
 
-# Function to save tracker data to a file
+# Function to save tracker data to a JSON file
 def save_tracker():
     """
-    Saves the tracker data to a file for persistence.
+    Saves the tracker data to a JSON file for persistence.
     """
     try:
         with open(TRACKER_FILE, "w") as f:
-            for date, progress in tracker_data.items():
-                progress_str = ",".join(map(str, progress))
-                f.write(f"{date}:{progress_str}\n")
+            json.dump(tracker_data, f, indent=4)
         print(f"Tracker data saved to file: {TRACKER_FILE}")
     except Exception as e:
         print(f"Error saving tracker data: {e}")
 
-# Function to load tracker data from a file
+# Function to load tracker data from a JSON file
 def load_tracker():
     """
-    Loads tracker data from a file for persistence.
+    Loads tracker data from a JSON file for persistence.
     """
     global tracker_data
     try:
-        with open(TRACKER_FILE, "r") as f:
-            for line in f:
-                date, progress_str = line.strip().split(":")
-                tracker_data[date] = list(map(lambda x: x == "True", progress_str.split(",")))
-        print(f"Tracker data loaded from file: {tracker_data}")
-    except FileNotFoundError:
-        print("Tracker file not found, initializing and saving new tracker data.")
-        save_tracker()
+        if os.path.exists(TRACKER_FILE):
+            with open(TRACKER_FILE, "r") as f:
+                tracker_data = json.load(f)
+            print(f"Tracker data loaded from file: {tracker_data}")
+        else:
+            print("Tracker file not found, initializing and saving new tracker data.")
+            save_tracker()
     except Exception as e:
         print(f"Error loading tracker data: {e}")
+
+# Function to reset tracker data for a new week
+def reset_weekly_data(start_date=None):
+    """
+    Resets the tracker data for a new week starting from the given start_date.
+    If no start_date is provided, it defaults to the current week.
+    """
+    global tracker_data
+    if start_date is None:
+        start_date = datetime.now().date() - timedelta(days=datetime.now().date().weekday())
+    else:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+
+    tracker_data = {
+        (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
+        for i in range(7)
+    }
+    log_message(f"Tracker data reset for the week starting {start_date}.")
+    save_tracker()
+    print(f"Tracker data reset for the week starting {start_date}.")
 
 # Initialize and load tracker data at startup
 initialize_tracker()

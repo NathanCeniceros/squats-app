@@ -1,11 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
+from tkcalendar import Calendar  # Add tkcalendar for calendar widget
 from src.tracker import time_slots, tracker_data, mark_as_completed, update_progress, initialize_tracker
 from datetime import datetime
-def update_calendar():
-    today = datetime.now().strftime("%Y-%m-%d")
-    if today in tracker_data:
-        completed_count = sum(tracker_data[today])
+
+def update_calendar(selected_date=None):
+    date = selected_date or datetime.now().strftime("%Y-%m-%d")
+    if date in tracker_data:
+        completed_count = sum(tracker_data[date])
         progress_label.config(text=f"Progress: {completed_count}/{len(time_slots)}")
         progress_bar["value"] = (completed_count / len(time_slots)) * 100
         
@@ -13,31 +15,26 @@ def update_calendar():
             status_label.config(text="Way to go! You completed your squats for today!", foreground="#006600")
         else:
             status_label.config(text="Keep going!", foreground="#333")
-        update_time_slots_list(today)
+        update_time_slots_list(date)
 
 def update_current_time():
-    # Get the current time
-    now = datetime.now().strftime("%I:%M:%S %p")  # Format: HH:MM:SS AM/PM
+    now = datetime.now().strftime("%I:%M:%S %p")
     current_time_label.config(text=f"Current Time: {now}")
+    root.after(1000, update_current_time)
 
-    # Schedule this function to run again in 1 second
-    root.after(1000, update_current_time)   
 def update_time_slots_list(date):
     current_time = datetime.now()
     current_hour = current_time.hour
     current_minute = current_time.minute
 
-    # Define styles for different statuses
     style = ttk.Style()
-    style.configure("Completed.TButton", foreground="#006600")  # Green for completed
-    style.configure("Missed.TButton", foreground="#990000")  # Red for missed
-    style.configure("Current.TButton", foreground="#3333FF", font=("Helvetica", 10, "bold"))  # Blue for current
+    style.configure("Completed.TButton", foreground="#006600")
+    style.configure("Missed.TButton", foreground="#990000")
+    style.configure("Current.TButton", foreground="#3333FF", font=("Helvetica", 10, "bold"))
 
-    # Clear existing widgets in the time slots frame
     for widget in time_slots_frame.winfo_children():
         widget.destroy()
 
-    # Add buttons dynamically for each time slot
     for index, slot_completed in enumerate(tracker_data[date]):
         slot = time_slots[index]
         slot_time = datetime.strptime(slot, "%I:%M %p")
@@ -64,15 +61,26 @@ def update_time_slots_list(date):
             command=lambda idx=index: mark_as_completed(date, idx),
             style=button_style
         )
-        button.pack(fill="x", pady=2, padx=5)     
+        button.pack(fill="x", pady=2, padx=5)
+
+def on_date_selected(event):
+    selected_date = calendar.selection_get().strftime("%Y-%m-%d")
+    update_calendar(selected_date)
+
 def build_main_screen():
-    global root, current_time_label, progress_bar, progress_label, status_label, time_slots_frame
+    global root, current_time_label, progress_bar, progress_label, status_label, time_slots_frame, calendar
     root = tk.Tk()
     root.title("Squats Tracker")
     root.configure(bg="#f0f0f0")
 
     title_label = ttk.Label(root, text="Daily Squats Progress", font=("Helvetica", 16, "bold"), foreground="#333")
     title_label.pack(pady=10)
+
+    calendar_frame = ttk.Frame(root)
+    calendar_frame.pack(pady=10)
+    calendar = Calendar(calendar_frame, selectmode="day", date_pattern="yyyy-mm-dd")
+    calendar.pack()
+    calendar.bind("<<CalendarSelected>>", on_date_selected)
 
     current_time_label = ttk.Label(root, text="Current Time: ", font=("Helvetica", 12), foreground="#333")
     current_time_label.pack(pady=5)
