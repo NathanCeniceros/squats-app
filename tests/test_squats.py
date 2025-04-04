@@ -96,11 +96,13 @@ class TestSquatsApp(unittest.TestCase):
     @timeout(5)
     @patch("src.ui.progress_label", create=True)  # Mock GUI component
     @patch("src.ui.status_label", create=True)  # Mock GUI component
-    def test_update_calendar(self, mock_status_label, mock_progress_label):
+    @patch("src.ui.progress_bar", create=True)  # Mock GUI component
+    def test_update_calendar(self, mock_progress_bar, mock_status_label, mock_progress_label):
         initialize_tracker()
         mock_progress_label.config = lambda **kwargs: None  # Mock config method
         mock_status_label.config = lambda **kwargs: None  # Mock config method
-        update_calendar(mock_progress_label=mock_progress_label, mock_status_label=mock_status_label)
+        mock_progress_bar.__setitem__ = lambda key, value: None  # Mock progress bar update
+        update_calendar(mock_progress_label=mock_progress_label, mock_status_label=mock_status_label, mock_progress_bar=mock_progress_bar)
         mock_status_label.config.assert_called_once_with(text="Keep going!", foreground="#333")
 
     @timeout(5)

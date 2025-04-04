@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 # Constants
 TRACKER_FILE = "squats_tracker.json"
+LOG_FILE = "squats_log.txt"  # Add this constant to define the log file path
 time_slots = [
     "8:00 AM", "8:45 AM", "9:30 AM", "10:15 AM", "11:00 AM", "11:45 AM",
     "12:30 PM", "1:15 PM", "2:00 PM", "2:45 PM", "3:30 PM", "4:15 PM", "5:00 PM"
