@@ -2,7 +2,7 @@ import unittest
 import os
 import signal
 import threading
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from datetime import datetime
 from src.tracker import (
     initialize_tracker,
@@ -101,11 +101,11 @@ class TestSquatsApp(unittest.TestCase):
     @patch("src.ui.progress_bar", create=True)  # Mock GUI component
     def test_update_calendar(self, mock_progress_bar, mock_status_label, mock_progress_label, mock_time_slots_frame, mock_style):
         initialize_tracker()
-        mock_progress_label.config = lambda **kwargs: None  # Mock config method
-        mock_status_label.config = lambda **kwargs: None  # Mock config method
-        mock_progress_bar.config = lambda **kwargs: None  # Correctly mock config method
-        mock_style.configure = lambda *args, **kwargs: None  # Mock style configuration
-        mock_time_slots_frame.winfo_children = lambda: []  # Mock frame children
+        mock_progress_label.config = Mock()  # Correctly mock config method
+        mock_status_label.config = Mock()  # Correctly mock config method
+        mock_progress_bar.config = Mock()  # Correctly mock config method
+        mock_style.configure = Mock()  # Mock style configuration
+        mock_time_slots_frame.winfo_children = Mock(return_value=[])  # Mock frame children
         update_calendar(mock_progress_label=mock_progress_label, mock_status_label=mock_status_label, mock_progress_bar=mock_progress_bar)
         mock_status_label.config.assert_called_once_with(text="Keep going!", foreground="#333")
 
@@ -138,7 +138,7 @@ class TestSquatsApp(unittest.TestCase):
             self.fail(f"popup() raised an exception: {e}")
 
     @timeout(5)
-    @patch("src.reminders.schedule_next_reminder")
+    @patch("src.reminders.schedule_next_reminder", create=True)
     def test_schedule_next_reminder_logic(self, mock_schedule):
         schedule_next_reminder(5)
         mock_schedule.assert_called_once_with(5)  # Verify reminder is scheduled with correct delay
