@@ -1,12 +1,20 @@
 import unittest
 import os
+from unittest.mock import patch
 from datetime import datetime
-from src.tracker import initialize_tracker, save_tracker, load_tracker, mark_as_completed, tracker_data, time_slots
+from src.tracker import (
+    initialize_tracker,
+    save_tracker,
+    load_tracker,
+    mark_as_completed,
+    tracker_data,
+    time_slots,
+)
 from src.ui import build_main_screen, update_calendar, update_current_time
 from src.reminders import schedule_next_reminder, popup
 
-class TestSquatsApp(unittest.TestCase):
 
+class TestSquatsApp(unittest.TestCase):
     # Tracker Module Tests
     def test_initialize_tracker(self):
         initialize_tracker()
@@ -59,19 +67,22 @@ class TestSquatsApp(unittest.TestCase):
             self.fail(f"update_current_time() raised an exception: {e}")
 
     # Reminders Module Tests
-    def test_schedule_next_reminder(self):
+    @patch("tkinter.Tk")  # Mock tkinter.Tk to prevent GUI from opening
+    def test_schedule_next_reminder(self, mock_tk):
         try:
             schedule_next_reminder(5)  # Schedule a reminder after 5 seconds
             self.assertTrue(True)  # Ensure no exceptions are raised
         except Exception as e:
             self.fail(f"schedule_next_reminder() raised an exception: {e}")
 
-    def test_popup(self):
+    @patch("tkinter.Tk")  # Mock tkinter.Tk to prevent GUI from opening
+    def test_popup(self, mock_tk):
         try:
             popup()  # Trigger the popup window
-            self.assertTrue(True)  # Ensure no exceptions are raised
+            mock_tk.assert_called_once()  # Ensure tkinter.Tk is called
         except Exception as e:
             self.fail(f"popup() raised an exception: {e}")
+
 
 if __name__ == "__main__":
     unittest.main()
