@@ -115,10 +115,18 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
         button = ttk.Button(
             frame,
             text=f"{slot} {status}",
-            command=lambda idx=index: tracker.mark_as_completed(date, idx),
+            command=lambda idx=index: mark_squat_as_completed(date, idx),
             style=button_style
         )
         button.pack(fill="x", pady=2, padx=5)
+
+
+def mark_squat_as_completed(date, slot_index):
+    """
+    Marks a squat as completed for the given date and time slot.
+    """
+    tracker.mark_as_completed(date, slot_index)
+    update_time_slots_list(date)
 
 
 def on_date_selected(event):
@@ -127,21 +135,39 @@ def on_date_selected(event):
     """
     selected_date = CALENDAR.selection_get().strftime("%Y-%m-%d")
     update_calendar(selected_date)
+    update_time_slots_list(selected_date)
+
+
+def change_calendar_view(*args):
+    """
+    Changes the calendar view mode based on the dropdown selection.
+    """
+    print(f"Changing calendar view to: {VIEW_MODE.get()}")
 
 
 def build_main_screen():
     """
     Builds the main screen for the squats tracker application.
     """
-    global ROOT, CURRENT_TIME_LABEL, PROGRESS_BAR, PROGRESS_LABEL, STATUS_LABEL, TIME_SLOTS_FRAME, CALENDAR
+    global ROOT, CURRENT_TIME_LABEL, PROGRESS_BAR, PROGRESS_LABEL, STATUS_LABEL, TIME_SLOTS_FRAME, CALENDAR, VIEW_MODE
     ROOT = tk.Tk()
     ROOT.title("Squats Tracker")
-    ROOT.configure(bg="#f0f0f0")
+    ROOT.configure(bg="#f0f8ff")  # Light blue background for a fun and approachable look
+
+    # Set the application icon to the squatting person icon
+    ROOT.iconbitmap("squat-icon.ico")
+
+    # Initialize VIEW_MODE after ROOT is created
+    VIEW_MODE = tk.StringVar(value="day")  # Default calendar view mode
 
     title_label = ttk.Label(
         ROOT, text="Daily Squats Progress", font=("Helvetica", 16, "bold"), foreground="#333"
     )
     title_label.pack(pady=10)
+
+    # Dropdown menu for calendar view
+    view_menu = ttk.OptionMenu(ROOT, VIEW_MODE, "day", "day", "week", "month", "year", command=change_calendar_view)
+    view_menu.pack(pady=5)
 
     calendar_frame = ttk.Frame(ROOT)
     calendar_frame.pack(pady=10)
@@ -157,7 +183,7 @@ def build_main_screen():
     PROGRESS_BAR = ttk.Progressbar(ROOT, orient="horizontal", length=500, mode="determinate")
     PROGRESS_BAR.pack(pady=10)
     PROGRESS_LABEL = ttk.Label(
-        ROOT, text="Progress: 0/13", font=("Helvetica", 12), foreground="#333"
+        ROOT, text="Today's Progress: 0/13", font=("Helvetica", 12), foreground="#333"
     )
     PROGRESS_LABEL.pack(pady=5)
 
@@ -170,9 +196,9 @@ def build_main_screen():
     TIME_SLOTS_FRAME.pack(fill="x", pady=10)
 
     # Pass required arguments to update_calendar
-    update_calendar(
-        datetime.now().strftime("%Y-%m-%d"), PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT
-    )
+    today = datetime.now().strftime("%Y-%m-%d")
+    update_calendar(today, PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
+    update_time_slots_list(today)
     update_current_time()
     return ROOT
 
