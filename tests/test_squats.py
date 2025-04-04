@@ -2,6 +2,7 @@ import unittest
 import os
 import signal
 import threading
+import logging
 from unittest.mock import patch, Mock
 from datetime import datetime
 from src.tracker import (
@@ -15,6 +16,8 @@ from src.tracker import (
 from src.ui import build_main_screen, update_calendar, update_current_time
 from src.reminders import schedule_next_reminder, popup
 
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class TimeoutException(Exception):
     pass
@@ -44,6 +47,7 @@ def timeout(seconds=5):
 
 class TestSquatsApp(unittest.TestCase):
     def setUp(self):
+        logging.info("Initializing tracker for test setup.")
         initialize_tracker()
 
     # Tracker Module Tests
@@ -72,42 +76,55 @@ class TestSquatsApp(unittest.TestCase):
     @patch("src.tracker.load_tracker", autospec=True)
     @patch("src.tracker.save_tracker", autospec=True)
     def test_mark_as_completed(self, mock_save_tracker, mock_load_tracker):
+        logging.info("Starting test_mark_as_completed.")
         test_date = "2025-04-04"
         tracker_data[test_date] = [False, False, False]  # Mock tracker data
+        logging.debug(f"Initial tracker data for {test_date}: {tracker_data[test_date]}")
 
         # Mark the first slot as completed
         mark_as_completed(test_date, 0, completed=True)
+        logging.debug(f"Tracker data after marking slot 0 as completed: {tracker_data[test_date]}")
         self.assertTrue(tracker_data[test_date][0], "Slot 0 should be marked as completed.")
 
         # Mark the first slot as not completed
         mark_as_completed(test_date, 0, completed=False)
+        logging.debug(f"Tracker data after marking slot 0 as not completed: {tracker_data[test_date]}")
         self.assertFalse(tracker_data[test_date][0], "Slot 0 should be marked as not completed.")
 
         # Mark the second slot as completed
         mark_as_completed(test_date, 1, completed=True)
+        logging.debug(f"Tracker data after marking slot 1 as completed: {tracker_data[test_date]}")
         self.assertTrue(tracker_data[test_date][1], "Slot 1 should be marked as completed.")
 
         # Validate that other slots remain unaffected
+        logging.debug(f"Validating that slot 2 remains unaffected: {tracker_data[test_date]}")
         self.assertFalse(tracker_data[test_date][2], "Slot 2 should remain not completed.")
 
         # Ensure save_tracker is called after each update
         self.assertEqual(mock_save_tracker.call_count, 3, "save_tracker should be called after each update.")
+        logging.info("test_mark_as_completed completed successfully.")
 
     @timeout(5)
     def test_save_tracker_content(self):
+        logging.info("Starting test_save_tracker_content.")
         initialize_tracker()
         save_tracker()
         with open("squats_tracker.json", "r") as file:
             content = file.read()
+        logging.debug(f"Content of squats_tracker.json: {content}")
         self.assertIn(datetime.now().strftime("%Y-%m-%d"), content)  # Verify today's date is saved
+        logging.info("test_save_tracker_content completed successfully.")
 
     # UI Module Tests
     @timeout(10)  # Increased timeout for GUI-related test
     def test_build_main_screen(self):
+        logging.info("Starting test_build_main_screen.")
         try:
             root = build_main_screen()
             self.assertIsNotNone(root)  # Main screen should be built successfully
+            logging.info("Main screen built successfully.")
         except Exception as e:
+            logging.error(f"build_main_screen() raised an exception: {e}")
             self.fail(f"build_main_screen() raised an exception: {e}")
 
     @timeout(5)
