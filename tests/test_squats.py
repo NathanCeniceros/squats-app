@@ -96,7 +96,7 @@ class TestSquatsApp(unittest.TestCase):
     def test_update_calendar(self, mock_progress_bar, mock_progress_label):
         initialize_tracker()
         mock_progress_label.config = lambda **kwargs: None  # Mock config method
-        mock_progress_bar.__setitem__ = lambda key, value: None  # Mock progress_bar["value"]
+        mock_progress_bar.__setitem__ = lambda self, key, value: None  # Correctly mock __setitem__
         update_calendar()
         self.assertTrue(True)  # Placeholder for actual verification logic
 
