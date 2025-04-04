@@ -3,6 +3,10 @@ import json
 from datetime import datetime, timedelta
 from shutil import copyfile
 
+"""
+Module for tracking squats progress.
+"""
+
 # Constants
 TRACKER_FILE = "squats_tracker.json"
 BACKUP_FILE = "squats_tracker_backup.json"  # Backup file for robustness
@@ -111,11 +115,9 @@ class Tracker:
             os.replace(temp_file, TRACKER_FILE)
             self.log_message(f"Tracker data saved to file: {TRACKER_FILE}. Current tracker data: {self.tracker_data}")
         except PermissionError:
-            self.log_message(f"Error: Permission denied when trying to save to {TRACKER_FILE}.")
-            print(f"Error: Permission denied when trying to save to {TRACKER_FILE}.")
-        except Exception as e:
+            self.log_message(f"Permission denied when saving to {TRACKER_FILE}.")
+        except (OSError, IOError) as e:
             self.log_message(f"Error saving tracker data: {e}")
-            print(f"Error saving tracker data: {e}")
 
     def load_tracker(self):
         """

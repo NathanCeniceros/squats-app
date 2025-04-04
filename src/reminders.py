@@ -15,7 +15,18 @@ logging.basicConfig(level=logging.DEBUG)
 # Create a global instance of Tracker
 tracker = Tracker()
 
-TEST_CONGRATULATORY_MESSAGE = None  # Global variable for testing purposes
+class ReminderConfig:
+    """
+    Configuration for reminders, including test messages.
+    """
+    TEST_CONGRATULATORY_MESSAGE = None
+
+    @staticmethod
+    def reset():
+        """
+        Resets the configuration to default values.
+        """
+        ReminderConfig.TEST_CONGRATULATORY_MESSAGE = None
 
 
 def schedule_next_reminder(delay, mock_timer=None):
@@ -31,8 +42,8 @@ def popup():
     Displays a popup reminder window.
     """
     # Allow popup to be mocked during tests
-    if hasattr(popup, "_mock_call"):
-        popup._mock_call()  # Trigger mock if set
+    if hasattr(popup, "trigger_mock"):
+        popup.trigger_mock()  # Trigger mock if set
         return
 
     if threading.current_thread() != threading.main_thread():
@@ -70,15 +81,15 @@ def set_popup_mock(mock_call):
     """
     Sets a mock call for the popup function.
     """
-    popup._mock_call = mock_call
+    popup.trigger_mock = mock_call  # Use a public attribute instead of a protected member
 
 
 def reset_popup_mock():
     """
     Resets the mock call for the popup function.
     """
-    if hasattr(popup, "_mock_call"):
-        del popup._mock_call
+    if hasattr(popup, "trigger_mock"):
+        del popup.trigger_mock
 
 
 def show_congratulatory_message(status_label=None):
@@ -94,7 +105,7 @@ def show_congratulatory_message(status_label=None):
     ]
 
     # Use the test message if set, otherwise pick a random one
-    message = TEST_CONGRATULATORY_MESSAGE or random.choice(messages)
+    message = ReminderConfig.TEST_CONGRATULATORY_MESSAGE or random.choice(messages)
 
     if status_label is not None:
         status_label.config(text=message, foreground="#006600")
@@ -114,7 +125,9 @@ def show_congratulatory_message(status_label=None):
     )
     label.pack(pady=20)
 
-    ok_button = ttk.Button(congrats_window, text="OK", command=congrats_window.destroy)
+    ok_button = ttk.Button(
+        congrats_window, text="OK", command=congrats_window.destroy
+    )
     ok_button.pack(pady=10)
 
     congrats_window.mainloop()
@@ -124,13 +137,11 @@ def set_test_congratulatory_message(message):
     """
     Sets a test message for the congratulatory message.
     """
-    global TEST_CONGRATULATORY_MESSAGE
-    TEST_CONGRATULATORY_MESSAGE = message
+    ReminderConfig.TEST_CONGRATULATORY_MESSAGE = message
 
 
 def reset_test_congratulatory_message():
     """
     Resets the test message for the congratulatory message.
     """
-    global TEST_CONGRATULATORY_MESSAGE
-    TEST_CONGRATULATORY_MESSAGE = None
+    ReminderConfig.TEST_CONGRATULATORY_MESSAGE = None

@@ -2,12 +2,19 @@
 Module for handling the user interface of the squats app.
 """
 
+import threading
 from datetime import datetime
 import tkinter as tk
 from tkinter import ttk
 from tkcalendar import Calendar
 from src.tracker import Tracker, time_slots
-import threading
+
+# Initialize global variables
+ROOT = None
+PROGRESS_BAR = None
+STATUS_LABEL = None
+TIME_SLOTS_FRAME = None
+CALENDAR = None
 
 # Create a global instance of Tracker
 tracker = Tracker()
@@ -53,8 +60,8 @@ def update_current_time():
     now = datetime.now().strftime("%I:%M:%S %p")
     if CURRENT_TIME_LABEL:
         CURRENT_TIME_LABEL.config(text=f"Current Time: {now}")
-    if root:
-        root.after(1000, update_current_time)  # Ensure this runs on the main thread
+    if ROOT:
+        ROOT.after(1000, update_current_time)  # Ensure this runs on the main thread
     else:
         print("Warning: root is not initialized. Skipping update_current_time.")
 
@@ -65,7 +72,7 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
     """
     if threading.current_thread() != threading.main_thread():
         print("Warning: update_time_slots_list called from a non-main thread. Scheduling on the main thread.")
-        root.after(0, lambda: update_time_slots_list(date, mock_style, mock_time_slots_frame))
+        ROOT.after(0, lambda: update_time_slots_list(date, mock_style, mock_time_slots_frame))
         return
 
     if date not in tracker.tracker_data:
@@ -81,7 +88,7 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
     style.configure("Missed.TButton", foreground="#990000")
     style.configure("Current.TButton", foreground="#3333FF", font=("Helvetica", 10, "bold"))
 
-    frame = mock_time_slots_frame or time_slots_frame  # Use mock frame if provided
+    frame = mock_time_slots_frame or TIME_SLOTS_FRAME  # Use mock frame if provided
     for widget in frame.winfo_children():
         widget.destroy()
 
@@ -115,51 +122,70 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
 
 
 def on_date_selected(event):
-    selected_date = calendar.selection_get().strftime("%Y-%m-%d")
+    """
+    Handles the event when a date is selected in the calendar.
+    """
+    selected_date = CALENDAR.selection_get().strftime("%Y-%m-%d")
     update_calendar(selected_date)
 
 
 def build_main_screen():
-    global root, CURRENT_TIME_LABEL, progress_bar, PROGRESS_LABEL, status_label, time_slots_frame, calendar
-    root = tk.Tk()
-    root.title("Squats Tracker")
-    root.configure(bg="#f0f0f0")
+    """
+    Builds the main screen for the squats tracker application.
+    """
+    global ROOT, CURRENT_TIME_LABEL, PROGRESS_BAR, PROGRESS_LABEL, STATUS_LABEL, TIME_SLOTS_FRAME, CALENDAR
+    ROOT = tk.Tk()
+    ROOT.title("Squats Tracker")
+    ROOT.configure(bg="#f0f0f0")
 
-    title_label = ttk.Label(root, text="Daily Squats Progress", font=("Helvetica", 16, "bold"), foreground="#333")
+    title_label = ttk.Label(
+        ROOT, text="Daily Squats Progress", font=("Helvetica", 16, "bold"), foreground="#333"
+    )
     title_label.pack(pady=10)
 
-    calendar_frame = ttk.Frame(root)
+    calendar_frame = ttk.Frame(ROOT)
     calendar_frame.pack(pady=10)
-    calendar = Calendar(calendar_frame, selectmode="day", date_pattern="yyyy-mm-dd")
-    calendar.pack()
-    calendar.bind("<<CalendarSelected>>", on_date_selected)
+    CALENDAR = Calendar(calendar_frame, selectmode="day", date_pattern="yyyy-mm-dd")
+    CALENDAR.pack()
+    CALENDAR.bind("<<CalendarSelected>>", on_date_selected)
 
-    CURRENT_TIME_LABEL = ttk.Label(root, text="Current Time: ", font=("Helvetica", 12), foreground="#333")
+    CURRENT_TIME_LABEL = ttk.Label(
+        ROOT, text="Current Time: ", font=("Helvetica", 12), foreground="#333"
+    )
     CURRENT_TIME_LABEL.pack(pady=5)
 
-    progress_bar = ttk.Progressbar(root, orient="horizontal", length=500, mode="determinate")
-    progress_bar.pack(pady=10)
-    PROGRESS_LABEL = ttk.Label(root, text="Progress: 0/13", font=("Helvetica", 12), foreground="#333")
+    PROGRESS_BAR = ttk.Progressbar(ROOT, orient="horizontal", length=500, mode="determinate")
+    PROGRESS_BAR.pack(pady=10)
+    PROGRESS_LABEL = ttk.Label(
+        ROOT, text="Progress: 0/13", font=("Helvetica", 12), foreground="#333"
+    )
     PROGRESS_LABEL.pack(pady=5)
 
-    status_label = ttk.Label(root, text="Keep going!", font=("Helvetica", 14, "bold"), foreground="#333")
-    status_label.pack(pady=10)
+    STATUS_LABEL = ttk.Label(
+        ROOT, text="Keep going!", font=("Helvetica", 14, "bold"), foreground="#333"
+    )
+    STATUS_LABEL.pack(pady=10)
 
-    time_slots_frame = ttk.Frame(root)
-    time_slots_frame.pack(fill="x", pady=10)
+    TIME_SLOTS_FRAME = ttk.Frame(ROOT)
+    TIME_SLOTS_FRAME.pack(fill="x", pady=10)
 
     # Pass required arguments to update_calendar
-    update_calendar(datetime.now().strftime("%Y-%m-%d"), PROGRESS_LABEL, status_label, progress_bar, root)
+    update_calendar(
+        datetime.now().strftime("%Y-%m-%d"), PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT
+    )
     update_current_time()
-    return root
+    return ROOT
 
 
 def schedule_next_reminder(delay_minutes, mock_status_label=None):
+    """
+    Schedules the next reminder after a specified delay in minutes.
+    """
     print(f"Debug: Scheduling next reminder in {delay_minutes} minutes.")
     # Add logic to schedule the reminder (e.g., using a timer or external service)
     threading.Timer(delay_minutes * 60, lambda: print("Reminder triggered!")).start()
 
     # Update the status label if provided
     if status:
-        status = mock_status_label or status_label  # Use mock_status_label if provided
+        status = mock_status_label or STATUS_LABEL  # Use mock_status_label if provided
         status.config(text="Way to go! You completed your squats for today!", foreground="#006600")

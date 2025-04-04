@@ -150,7 +150,7 @@ class TestSquatsApp(unittest.TestCase):
 
     @timeout(5)
     @patch("src.ui.CURRENT_TIME_LABEL", create=True)  # Mock CURRENT_TIME_LABEL
-    @patch("src.ui.root", create=True)  # Mock root
+    @patch("src.ui.ROOT", create=True)  # Mock ROOT
     def test_update_current_time(self, mock_root, mock_current_time_label):
         """
         Test the update_current_time function to ensure it updates the time label correctly.
@@ -158,7 +158,7 @@ class TestSquatsApp(unittest.TestCase):
         # Mock the config method of CURRENT_TIME_LABEL
         mock_current_time_label.config = Mock()
 
-        # Mock the after method of root to prevent actual scheduling
+        # Mock the after method of ROOT to prevent actual scheduling
         mock_root.after = Mock()
 
         # Call the function
@@ -168,7 +168,7 @@ class TestSquatsApp(unittest.TestCase):
         now = datetime.now().strftime("%I:%M:%S %p")
         mock_current_time_label.config.assert_called_once_with(text=f"Current Time: {now}")
 
-        # Assert that root.after was called to schedule the next update
+        # Assert that ROOT.after was called to schedule the next update
         mock_root.after.assert_called_once_with(1000, update_current_time)
 
     # Reminders Module Tests
