@@ -26,6 +26,7 @@ def initialize_tracker(start_date=None):
         (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
         for i in range(7)
     }
+    log_message(f"Initialized tracker data starting from {start_date}.")
     print(f"Initialized tracker data starting from {start_date}: {tracker_data}")
 
 # Function to log messages to a file
@@ -63,25 +64,25 @@ def mark_as_completed(date, slot_index):
     Toggles the completion status of a specific time slot for the given date.
     """
     if date not in tracker_data:
-        print(f"Error: Date {date} is not in the tracker data.")
-        return
+        print(f"Date {date} not found in tracker data. Initializing data for this date.")
+        tracker_data[date] = [False] * len(time_slots)  # Initialize data for the date
+
     if not (0 <= slot_index < len(time_slots)):
         print(f"Error: Slot index {slot_index} is out of range.")
         return
 
     print(f"Before modification - Date: {date}, Slot index: {slot_index}")
     print(f"Tracker Data: {tracker_data}")
-    
-    if date in tracker_data and 0 <= slot_index < len(time_slots):
-        if tracker_data[date][slot_index]:  # Undo completion
-            tracker_data[date][slot_index] = False
-            log_message(f"User undid squats for {time_slots[slot_index]}.")
-        else:  # Mark as completed
-            tracker_data[date][slot_index] = True
-            log_message(f"User completed squats for {time_slots[slot_index]}.")
-        
-        save_tracker()  # Save changes to the tracker file
-    
+
+    if tracker_data[date][slot_index]:  # Undo completion
+        tracker_data[date][slot_index] = False
+        log_message(f"User undid squats for {time_slots[slot_index]}.")
+    else:  # Mark as completed
+        tracker_data[date][slot_index] = True
+        log_message(f"User completed squats for {time_slots[slot_index]}.")
+
+    save_tracker()  # Save changes to the tracker file
+
     print(f"After modification - Tracker Data: {tracker_data}")
 
 # Function to save tracker data to a JSON file
@@ -90,12 +91,11 @@ def save_tracker():
     Saves the tracker data to a JSON file for persistence.
     """
     try:
-        if not os.path.exists(TRACKER_FILE):
-            with open(TRACKER_FILE, "w") as f:
-                f.write("{}")  # Create an empty JSON file if it doesn't exist
         with open(TRACKER_FILE, "w") as f:
             json.dump(tracker_data, f, indent=4)
         print(f"Tracker data saved to file: {TRACKER_FILE}")
+    except PermissionError:
+        print(f"Error: Permission denied when trying to save to {TRACKER_FILE}.")
     except Exception as e:
         print(f"Error saving tracker data: {e}")
 
@@ -120,6 +120,7 @@ def load_tracker():
         save_tracker()
     except Exception as e:
         print(f"Error loading tracker data: {e}")
+        initialize_tracker()  # Fallback to reinitialize tracker data
 
 # Function to reset tracker data for a new week
 def reset_weekly_data(start_date=None):
@@ -128,18 +129,29 @@ def reset_weekly_data(start_date=None):
     If no start_date is provided, it defaults to the current week.
     """
     global tracker_data
-    if start_date is None:
-        start_date = datetime.now().date() - timedelta(days=datetime.now().date().weekday())
-    else:
-        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+    try:
+        if start_date is None:
+            start_date = datetime.now().date() - timedelta(days=datetime.now().date().weekday())
+        else:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
 
-    tracker_data = {
-        (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
-        for i in range(7)
-    }
-    log_message(f"Tracker data reset for the week starting {start_date}.")
-    save_tracker()
-    print(f"Tracker data reset for the week starting {start_date}.")
+        tracker_data = {
+            (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
+            for i in range(7)
+        }
+        log_message(f"Tracker data reset for the week starting {start_date}.")
+        save_tracker()
+        print(f"Tracker data reset for the week starting {start_date}.")
+    except ValueError:
+        print(f"Error: Invalid start_date format '{start_date}'. Expected format: YYYY-MM-DD.")
+
+def print_tracker_data():
+    """
+    Prints the current tracker data for debugging purposes.
+    """
+    print("Current Tracker Data:")
+    for date, slots in tracker_data.items():
+        print(f"{date}: {slots}")
 
 # Initialize and load tracker data at startup
 initialize_tracker()
