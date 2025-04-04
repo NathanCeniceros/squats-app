@@ -16,13 +16,13 @@ def update_calendar(selected_date=None, mock_progress_label=None, mock_status_la
     if date not in tracker_data:
         print(f"Warning: No data found for date {date}.")
         label.config(text="No data available for this date.")
-        bar["value"] = 0
+        bar.config(value=0)  # Use config method for progress bar
         status.config(text="No progress yet.", foreground="#333")
         return
 
     completed_count = sum(tracker_data[date])
     label.config(text=f"Progress: {completed_count}/{len(time_slots)}")
-    bar["value"] = (completed_count / len(time_slots)) * 100
+    bar.config(value=(completed_count / len(time_slots)) * 100)  # Use config method for progress bar
 
     if completed_count == len(time_slots):
         status.config(text="Way to go! You completed your squats for today!", foreground="#006600")

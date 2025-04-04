@@ -101,7 +101,7 @@ class TestSquatsApp(unittest.TestCase):
         initialize_tracker()
         mock_progress_label.config = lambda **kwargs: None  # Mock config method
         mock_status_label.config = lambda **kwargs: None  # Mock config method
-        mock_progress_bar.__setitem__ = lambda key, value: None  # Mock progress bar update
+        mock_progress_bar.config = lambda **kwargs: None  # Correctly mock config method
         update_calendar(mock_progress_label=mock_progress_label, mock_status_label=mock_status_label, mock_progress_bar=mock_progress_bar)
         mock_status_label.config.assert_called_once_with(text="Keep going!", foreground="#333")
 
