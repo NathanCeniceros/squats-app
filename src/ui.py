@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from src.tracker import time_slots, tracker_data, mark_as_complted, update_progress, initialize_tracker
+from src.tracker import time_slots, tracker_data, mark_as_completed, update_progress, initialize_tracker
 from datetime import datetime
 def update_calendar():
     today = datetime.now().strftime("%Y-%m-%d")
