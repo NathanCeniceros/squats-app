@@ -50,7 +50,7 @@ jobs:
       - name: Build executable
         run: |
           cd ${{ github.workspace }}
-          pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py
+          pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py --name=squats
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
