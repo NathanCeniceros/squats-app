@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  build-and-test:
-    runs-on: windows-latest  # Windows required for building the executable
+  test:
+    runs-on: ubuntu-latest  # Use Ubuntu for testing
 
     steps:
       # Step 1: Check out the code
@@ -24,103 +24,51 @@ jobs:
           python-version: 3.x
 
       # Step 3: Install dependencies
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pylint pyinstaller
+          pip install pytest pyinstaller
 
-      # Step 4: Run unit tests
+      # Step 4: Run Unit Tests
       - name: Run Unit Tests
-        run: python -m unittest discover -s tests
+        run: pytest tests/test_squats.py
 
-      # Step 5: Check code quality with pylint
-      - name: Run pylint
-        run: pylint src/
+  build:
+    runs-on: windows-latest  # Use Windows for building the executable
 
-      # Step 6: Build the executable
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.x
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      # Step 4: Build the executable
       - name: Build executable
         run: |
           pyinstaller --onefile --noconsole --icon=squat-icon.ico --name=squats main.py
 
-      # Step 7: Verify build output
+      # Step 5: Verify build output
       - name: List build directory
         run: ls -R dist/
 
-      # Step 8: Test executable startup
+      # Step 6: Test executable startup
       - name: Test executable startup
-        run: dist/squats.exe
+        run: ./dist/squats.exe
 
-      # Step 9: Upload artifact
+      # Step 7: Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: squats-executable
-          path: okay here is my current one does the above build.yml capture all my current aspects or is it okay to replace this one name: Build Squats App
-on: push: branches: - main pull_request: branches: - main
-jobs: test: runs-on: ubuntu-latest  # Use Ubuntu for testing
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v3  # Defines an external action for checking out code
-
-  - name: Set up Python
-    uses: actions/setup-python@v3  # Defines an external action for setting up Python
-    with:
-      python-version: 3.x
-
-  - name: Install dependencies
-    run: |
-      python -m pip install --upgrade pip
-      pip install pytest pyinstaller  # Shell command to install dependencies
-
-  - name: Run Unit Tests
-    run: |
-      pytest tests/test_squats.py  # Shell command to execute tests
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-build: runs-on: windows-latest  # Use Windows for building the executable
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v3  # Defines an external action for checking out code
-
-  - name: Set up Python
-    uses: actions/setup-python@v3  # Defines an external action for setting up Python
-    with:
-      python-version: 3.x
-
-  - name: Install dependencies
-    run: |
-      python -m pip install --upgrade pip
-      pip install pyinstaller  # Shell command to install dependencies
-
-  - name: Build executable
-    run: |
-      cd ${{ github.workspace }}
-      pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py --name=squats
-
-  - name: Verify build output
-    run: |
-      ls -R dist/
-
-  - name: Test executable startup
-    run: |
-      ./dist/squats.exe
-
-  - name: Upload artifact
-    uses: actions/upload-artifact@v4
-    with:
-      name: squats-executable
-      path: '**/dist/*.exe'
+          path: '**/dist/*.exe'
