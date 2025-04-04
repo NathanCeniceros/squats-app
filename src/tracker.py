@@ -63,19 +63,17 @@ def update_progress(date, slot_index):
 def mark_as_completed(date, slot_index, completed=True):
     """
     Marks a specific time slot as completed or not completed for the given date.
-    If the date is not in the tracker data, it initializes the data for that date.
+    Ensures the tracker data is updated and saved reliably.
     """
     global tracker_data
 
     # Ensure the date exists in tracker_data
     if date not in tracker_data:
-        print(f"Date {date} not found in tracker data. Initializing data for this date.")
         tracker_data[date] = [False] * len(time_slots)
 
     # Validate the slot index
     if not (0 <= slot_index < len(time_slots)):
-        print(f"Error: Slot index {slot_index} is out of range.")
-        return
+        raise ValueError(f"Slot index {slot_index} is out of range.")
 
     # Update the completion status
     tracker_data[date][slot_index] = completed
@@ -84,7 +82,6 @@ def mark_as_completed(date, slot_index, completed=True):
 
     # Save the updated tracker data
     save_tracker()
-    print(f"Updated tracker data for {date}: {tracker_data[date]}")
 
 # Function to save tracker data to a JSON file
 def save_tracker():
