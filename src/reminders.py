@@ -34,8 +34,15 @@ def popup():
 
     bounce_window()
 
+    def snooze():
+        reminder_window.destroy()
+        schedule_next_reminder(300)  # Snooze for 5 minutes
+
     ok_button = ttk.Button(reminder_window, text="OK", command=reminder_window.destroy)
-    ok_button.pack(pady=10)
+    ok_button.pack(side="left", padx=10, pady=10)
+
+    snooze_button = ttk.Button(reminder_window, text="Snooze", command=snooze)
+    snooze_button.pack(side="right", padx=10, pady=10)
 
     reminder_window.mainloop()
 

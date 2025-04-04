@@ -90,6 +90,9 @@ def save_tracker():
     Saves the tracker data to a JSON file for persistence.
     """
     try:
+        if not os.path.exists(TRACKER_FILE):
+            with open(TRACKER_FILE, "w") as f:
+                f.write("{}")  # Create an empty JSON file if it doesn't exist
         with open(TRACKER_FILE, "w") as f:
             json.dump(tracker_data, f, indent=4)
         print(f"Tracker data saved to file: {TRACKER_FILE}")
@@ -109,7 +112,12 @@ def load_tracker():
             print(f"Tracker data loaded from file: {tracker_data}")
         else:
             print("Tracker file not found, initializing and saving new tracker data.")
+            initialize_tracker()
             save_tracker()
+    except json.JSONDecodeError:
+        print("Error: Tracker file is corrupted. Reinitializing tracker data.")
+        initialize_tracker()
+        save_tracker()
     except Exception as e:
         print(f"Error loading tracker data: {e}")
 

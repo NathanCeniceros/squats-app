@@ -6,16 +6,22 @@ from datetime import datetime
 
 def update_calendar(selected_date=None):
     date = selected_date or datetime.now().strftime("%Y-%m-%d")
-    if date in tracker_data:
-        completed_count = sum(tracker_data[date])
-        progress_label.config(text=f"Progress: {completed_count}/{len(time_slots)}")
-        progress_bar["value"] = (completed_count / len(time_slots)) * 100
-        
-        if completed_count == len(time_slots):
-            status_label.config(text="Way to go! You completed your squats for today!", foreground="#006600")
-        else:
-            status_label.config(text="Keep going!", foreground="#333")
-        update_time_slots_list(date)
+    if date not in tracker_data:
+        print(f"Warning: No data found for date {date}.")
+        progress_label.config(text="No data available for this date.")
+        progress_bar["value"] = 0
+        status_label.config(text="No progress yet.", foreground="#333")
+        return
+
+    completed_count = sum(tracker_data[date])
+    progress_label.config(text=f"Progress: {completed_count}/{len(time_slots)}")
+    progress_bar["value"] = (completed_count / len(time_slots)) * 100
+
+    if completed_count == len(time_slots):
+        status_label.config(text="Way to go! You completed your squats for today!", foreground="#006600")
+    else:
+        status_label.config(text="Keep going!", foreground="#333")
+    update_time_slots_list(date)
 
 def update_current_time():
     now = datetime.now().strftime("%I:%M:%S %p")
@@ -23,6 +29,10 @@ def update_current_time():
     root.after(1000, update_current_time)
 
 def update_time_slots_list(date):
+    if date not in tracker_data:
+        print(f"Warning: No data found for date {date}.")
+        return
+
     current_time = datetime.now()
     current_hour = current_time.hour
     current_minute = current_time.minute
