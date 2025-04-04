@@ -151,7 +151,7 @@ def on_date_selected(event):
     update_time_slots_list(selected_date)
 
 
-def change_calendar_view(*args):
+def change_calendar_view():
     """
     Changes the calendar view mode based on the dropdown selection.
     """
@@ -159,11 +159,15 @@ def change_calendar_view(*args):
     if view_mode == "day":
         CALENDAR.config(selectmode="day")
     elif view_mode == "week":
-        messagebox.showinfo("Info", "Week view is not implemented yet.")
+        start_date = CALENDAR.selection_get()
+        end_date = start_date + timedelta(days=6)
+        messagebox.showinfo("Week View", f"Displaying week: {start_date} to {end_date}")
     elif view_mode == "month":
-        messagebox.showinfo("Info", "Month view is not implemented yet.")
+        selected_date = CALENDAR.selection_get()
+        messagebox.showinfo("Month View", f"Displaying month: {selected_date.strftime('%B %Y')}")
     elif view_mode == "year":
-        messagebox.showinfo("Info", "Year view is not implemented yet.")
+        selected_date = CALENDAR.selection_get()
+        messagebox.showinfo("Year View", f"Displaying year: {selected_date.year}")
     else:
         messagebox.showerror("Error", f"Unknown view mode: {view_mode}")
     print(f"Changed calendar view to: {view_mode}")
