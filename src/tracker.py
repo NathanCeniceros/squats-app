@@ -73,7 +73,10 @@ def mark_as_completed(date, slot_index):
         print(f"Error: Slot index {slot_index} is out of range.")
         return
 
+    print(f"Before toggle: {tracker_data[date]}")  # Log state before toggle
     tracker_data[date][slot_index] = not tracker_data[date][slot_index]  # Toggle completion status
+    print(f"After toggle: {tracker_data[date]}")  # Log state after toggle
+
     action = "completed" if tracker_data[date][slot_index] else "undid"
     log_message(f"User {action} squats for {time_slots[slot_index]} on {date}.")
 

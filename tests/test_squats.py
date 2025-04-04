@@ -207,8 +207,14 @@ class TestSquatsApp(unittest.TestCase):
         test_date = "2025-04-04"
         initialize_tracker()  # Ensure tracker_data is initialized
         tracker_data[test_date] = [False, False, False]  # Mock tracker data
+
+        # Mark the first slot as completed
         mark_as_completed(test_date, 0)
         self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
+
+        # Toggle the first slot back to not completed
+        mark_as_completed(test_date, 0)
+        self.assertFalse(tracker_data[test_date][0])  # Assert slot is toggled back
 
     @patch("src.ui.ttk.Style", create=True)
     @patch("src.ui.time_slots_frame", create=True)
