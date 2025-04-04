@@ -1,4 +1,4 @@
-name: Build Squats App
+name: Build and Test Squats App
 
 on:
   push:
@@ -9,59 +9,118 @@ on:
       - main
 
 jobs:
-  test:
-    runs-on: ubuntu-latest  # Use Ubuntu for testing
+  build-and-test:
+    runs-on: windows-latest  # Windows required for building the executable
 
     steps:
+      # Step 1: Check out the code
       - name: Checkout code
-        uses: actions/checkout@v3  # Defines an external action for checking out code
+        uses: actions/checkout@v3
 
+      # Step 2: Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v3  # Defines an external action for setting up Python
+        uses: actions/setup-python@v3
         with:
           python-version: 3.x
 
-      - name: Install dependencies
+      # Step 3: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pyinstaller  # Shell command to install dependencies
+          pip install pytest pylint pyinstaller
 
+      # Step 4: Run unit tests
       - name: Run Unit Tests
-        run: |
-          pytest tests/test_squats.py  # Shell command to execute tests
+        run: python -m unittest discover -s tests
 
-  build:
-    runs-on: windows-latest  # Use Windows for building the executable
+      # Step 5: Check code quality with pylint
+      - name: Run pylint
+        run: pylint src/
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3  # Defines an external action for checking out code
-
-      - name: Set up Python
-        uses: actions/setup-python@v3  # Defines an external action for setting up Python
-        with:
-          python-version: 3.x
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller  # Shell command to install dependencies
-
+      # Step 6: Build the executable
       - name: Build executable
         run: |
-          cd ${{ github.workspace }}
-          pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py --name=squats
+          pyinstaller --onefile --noconsole --icon=squat-icon.ico --name=squats main.py
 
-      - name: Verify build output
-        run: |
-          ls -R dist/
+      # Step 7: Verify build output
+      - name: List build directory
+        run: ls -R dist/
 
+      # Step 8: Test executable startup
       - name: Test executable startup
-        run: |
-          ./dist/squats.exe
+        run: dist/squats.exe
 
+      # Step 9: Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: squats-executable
-          path: '**/dist/*.exe'
+          path: okay here is my current one does the above build.yml capture all my current aspects or is it okay to replace this one name: Build Squats App
+on: push: branches: - main pull_request: branches: - main
+jobs: test: runs-on: ubuntu-latest  # Use Ubuntu for testing
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v3  # Defines an external action for checking out code
+
+  - name: Set up Python
+    uses: actions/setup-python@v3  # Defines an external action for setting up Python
+    with:
+      python-version: 3.x
+
+  - name: Install dependencies
+    run: |
+      python -m pip install --upgrade pip
+      pip install pytest pyinstaller  # Shell command to install dependencies
+
+  - name: Run Unit Tests
+    run: |
+      pytest tests/test_squats.py  # Shell command to execute tests
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+build: runs-on: windows-latest  # Use Windows for building the executable
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v3  # Defines an external action for checking out code
+
+  - name: Set up Python
+    uses: actions/setup-python@v3  # Defines an external action for setting up Python
+    with:
+      python-version: 3.x
+
+  - name: Install dependencies
+    run: |
+      python -m pip install --upgrade pip
+      pip install pyinstaller  # Shell command to install dependencies
+
+  - name: Build executable
+    run: |
+      cd ${{ github.workspace }}
+      pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py --name=squats
+
+  - name: Verify build output
+    run: |
+      ls -R dist/
+
+  - name: Test executable startup
+    run: |
+      ./dist/squats.exe
+
+  - name: Upload artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: squats-executable
+      path: '**/dist/*.exe'
