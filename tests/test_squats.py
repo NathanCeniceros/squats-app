@@ -1,5 +1,5 @@
 import unittest
-from tracker import initialize_tracker, save_tracker, load_tracker
+from src.tracker import initialize_tracker, save_tracker, load_tracker
 
 class TestSquatsApp(unittest.TestCase):
 
