@@ -53,7 +53,7 @@ jobs:
           pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4  # Defines an external action for uploading artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: squats-executable
-          path: squats-app/squats-app/dist/squats.exe
+          path: '**/dist/*.exe'
