@@ -2,7 +2,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 import random
-from tracker import update_progress
+from src.tracker import update_progress
 
 def schedule_next_reminder(delay):
     threading.Timer(delay, popup).start()
