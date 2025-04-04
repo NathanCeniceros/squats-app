@@ -7,23 +7,26 @@ from datetime import datetime
 progress_label = None  # Declare globally for testing
 current_time_label = None  # Declare globally for testing
 
-def update_calendar(selected_date=None):
+def update_calendar(selected_date=None, mock_progress_label=None, mock_status_label=None):
     date = selected_date or datetime.now().strftime("%Y-%m-%d")
+    label = mock_progress_label or progress_label
+    status = mock_status_label or status_label
+
     if date not in tracker_data:
         print(f"Warning: No data found for date {date}.")
-        progress_label.config(text="No data available for this date.")
+        label.config(text="No data available for this date.")
         progress_bar["value"] = 0
-        status_label.config(text="No progress yet.", foreground="#333")
+        status.config(text="No progress yet.", foreground="#333")
         return
 
     completed_count = sum(tracker_data[date])
-    progress_label.config(text=f"Progress: {completed_count}/{len(time_slots)}")
+    label.config(text=f"Progress: {completed_count}/{len(time_slots)}")
     progress_bar["value"] = (completed_count / len(time_slots)) * 100
 
     if completed_count == len(time_slots):
-        status_label.config(text="Way to go! You completed your squats for today!", foreground="#006600")
+        status.config(text="Way to go! You completed your squats for today!", foreground="#006600")
     else:
-        status_label.config(text="Keep going!", foreground="#333")
+        status.config(text="Keep going!", foreground="#333")
     update_time_slots_list(date)
 
 def update_current_time():
