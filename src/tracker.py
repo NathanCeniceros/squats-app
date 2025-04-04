@@ -16,6 +16,21 @@ def initialize_tracker():
         for i in range(7)
     }
 
+def mark_as_completed(date, slot_index):
+    """
+    Toggles the completion status of a specific time slot for the given date.
+    """
+    if date in tracker_data and 0 <= slot_index < len(time_slots):
+        if tracker_data[date][slot_index]:  # If marked completed
+            tracker_data[date][slot_index] = False  # Undo completion
+            log_message(f"User undid squats for {time_slots[slot_index]}.")
+        else:  # Mark as completed
+            tracker_data[date][slot_index] = True
+            log_message(f"User completed squats for {time_slots[slot_index]}.")
+        
+        # Save the updated tracker data to the file
+        save_tracker()
+
 def save_tracker():
     with open(TRACKER_FILE, "w") as f:
         for date, progress in tracker_data.items():
