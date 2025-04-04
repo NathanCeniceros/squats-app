@@ -9,6 +9,8 @@ from tkinter import ttk, messagebox
 from tkcalendar import Calendar
 from src.tracker import Tracker, time_slots
 import os
+import json  # Add for data persistence
+from src.reminders import show_congratulatory_message  # Import the function
 
 # Initialize global variables
 ROOT = None
@@ -131,6 +133,11 @@ def mark_squat_as_completed(date, slot_index):
     tracker.tracker_data[date][slot_index] = not tracker.tracker_data[date][slot_index]
     update_time_slots_list(date)
     update_calendar(date, PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
+
+    # Check if all squats for the day are completed
+    if all(tracker.tracker_data[date]):
+        show_congratulatory_message(STATUS_LABEL)  # Show congratulatory message
+
     status = "completed" if tracker.tracker_data[date][slot_index] else "not completed"
     messagebox.showinfo("Status Updated", f"Time slot {time_slots[slot_index]} marked as {status}.")
 
@@ -160,6 +167,39 @@ def change_calendar_view(*args):
     else:
         messagebox.showerror("Error", f"Unknown view mode: {view_mode}")
     print(f"Changed calendar view to: {view_mode}")
+
+
+def save_progress():
+    """
+    Save the tracker data to a file.
+    """
+    with open("progress_data.json", "w") as file:
+        json.dump(tracker.tracker_data, file)
+    print("Progress saved.")
+
+
+def load_progress():
+    """
+    Load the tracker data from a file.
+    """
+    if os.path.exists("progress_data.json"):
+        with open("progress_data.json", "r") as file:
+            tracker.tracker_data = json.load(file)
+        print("Progress loaded.")
+    else:
+        print("No saved progress found.")
+
+
+def notify_missed_slots(date):
+    """
+    Notify the user of missed slots for the given date.
+    """
+    missed_slots = [
+        time_slots[i] for i, completed in enumerate(tracker.tracker_data.get(date, []))
+        if not completed
+    ]
+    if missed_slots:
+        messagebox.showwarning("Missed Slots", f"You missed the following slots: {', '.join(missed_slots)}")
 
 
 def build_main_screen():
@@ -221,6 +261,8 @@ def build_main_screen():
     update_calendar(today, PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
     update_time_slots_list(today)
     update_current_time()
+    load_progress()  # Load progress on startup
+    ROOT.protocol("WM_DELETE_WINDOW", lambda: (save_progress(), ROOT.destroy()))  # Save on exit
     return ROOT
 
 

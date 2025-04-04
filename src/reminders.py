@@ -5,7 +5,7 @@ Module for handling reminders and notifications in the squats app.
 import logging
 import threading
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import random
 from src.tracker import Tracker
 
@@ -145,3 +145,30 @@ def reset_test_congratulatory_message():
     Resets the test message for the congratulatory message.
     """
     ReminderConfig.TEST_CONGRATULATORY_MESSAGE = None
+
+
+def configure_reminders():
+    """
+    Opens a GUI to configure reminder intervals.
+    """
+    config_window = tk.Tk()
+    config_window.title("Configure Reminders")
+    config_window.geometry("300x200")
+
+    label = ttk.Label(config_window, text="Set Reminder Interval (minutes):", font=("Helvetica", 12))
+    label.pack(pady=10)
+
+    interval_var = tk.IntVar(value=30)
+    interval_entry = ttk.Entry(config_window, textvariable=interval_var)
+    interval_entry.pack(pady=5)
+
+    def save_interval():
+        interval = interval_var.get()
+        schedule_next_reminder(interval)
+        messagebox.showinfo("Success", f"Reminder interval set to {interval} minutes.")
+        config_window.destroy()
+
+    save_button = ttk.Button(config_window, text="Save", command=save_interval)
+    save_button.pack(pady=10)
+
+    config_window.mainloop()
