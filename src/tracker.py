@@ -64,7 +64,7 @@ def mark_as_completed(date, slot_index):
     """
     Toggles the completion status of a specific time slot for the given date.
     """
-    global tracker_data  # Ensure global tracker_data is used
+    global tracker_data
     if date not in tracker_data:
         print(f"Date {date} not found in tracker data. Initializing data for this date.")
         tracker_data[date] = [False] * len(time_slots)  # Initialize data for the date
@@ -76,12 +76,9 @@ def mark_as_completed(date, slot_index):
     print(f"Before modification - Date: {date}, Slot index: {slot_index}")
     print(f"Tracker Data: {tracker_data}")
 
-    if tracker_data[date][slot_index]:  # Undo completion
-        tracker_data[date][slot_index] = False
-        log_message(f"User undid squats for {time_slots[slot_index]} on {date}.")
-    else:  # Mark as completed
-        tracker_data[date][slot_index] = True
-        log_message(f"User completed squats for {time_slots[slot_index]} on {date}.")
+    tracker_data[date][slot_index] = not tracker_data[date][slot_index]  # Toggle completion status
+    action = "completed" if tracker_data[date][slot_index] else "undid"
+    log_message(f"User {action} squats for {time_slots[slot_index]} on {date}.")
 
     save_tracker()  # Save changes to the tracker file
 
