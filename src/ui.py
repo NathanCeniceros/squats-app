@@ -26,6 +26,7 @@ def update_calendar(selected_date=None, mock_progress_label=None, mock_status_la
 
     if completed_count == len(time_slots):
         status.config(text="Way to go! You completed your squats for today!", foreground="#006600")
+        schedule_next_reminder(5)  # Schedule a reminder for the next session
     else:
         status.config(text="Keep going!", foreground="#333")
     update_time_slots_list(date)
@@ -116,3 +117,7 @@ def build_main_screen():
     update_calendar()
     update_current_time()
     return root
+
+def schedule_next_reminder(delay_minutes):
+    print(f"Scheduling next reminder in {delay_minutes} minutes.")
+    # Add logic to schedule the reminder (e.g., using a timer or external service)
