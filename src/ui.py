@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkcalendar import Calendar
 from src.tracker import Tracker, time_slots
+import threading
 
 # Create a global instance of Tracker
 tracker = Tracker()
@@ -50,11 +51,23 @@ def update_current_time():
     Updates the current time label every second.
     """
     now = datetime.now().strftime("%I:%M:%S %p")
-    CURRENT_TIME_LABEL.config(text=f"Current Time: {now}")
-    root.after(1000, update_current_time)
+    if CURRENT_TIME_LABEL:
+        CURRENT_TIME_LABEL.config(text=f"Current Time: {now}")
+    if root:
+        root.after(1000, update_current_time)  # Ensure this runs on the main thread
+    else:
+        print("Warning: root is not initialized. Skipping update_current_time.")
 
 
 def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
+    """
+    Updates the time slots list for the given date.
+    """
+    if threading.current_thread() != threading.main_thread():
+        print("Warning: update_time_slots_list called from a non-main thread. Scheduling on the main thread.")
+        root.after(0, lambda: update_time_slots_list(date, mock_style, mock_time_slots_frame))
+        return
+
     if date not in tracker.tracker_data:
         print(f"Warning: No data found for date {date}.")
         return
@@ -128,6 +141,7 @@ def build_main_screen():
     progress_bar.pack(pady=10)
     PROGRESS_LABEL = ttk.Label(root, text="Progress: 0/13", font=("Helvetica", 12), foreground="#333")
     PROGRESS_LABEL.pack(pady=5)
+
     status_label = ttk.Label(root, text="Keep going!", font=("Helvetica", 14, "bold"), foreground="#333")
     status_label.pack(pady=10)
 
@@ -142,11 +156,10 @@ def build_main_screen():
 
 def schedule_next_reminder(delay_minutes, mock_status_label=None):
     print(f"Debug: Scheduling next reminder in {delay_minutes} minutes.")
-    status = mock_status_label or status_label  # Use mock_status_label if provided
+    # Add logic to schedule the reminder (e.g., using a timer or external service)
+    threading.Timer(delay_minutes * 60, lambda: print("Reminder triggered!")).start()
 
     # Update the status label if provided
     if status:
+        status = mock_status_label or status_label  # Use mock_status_label if provided
         status.config(text="Way to go! You completed your squats for today!", foreground="#006600")
-
-    # Add logic to schedule the reminder (e.g., using a timer or external service)
-    threading.Timer(delay_minutes * 60, lambda: print("Reminder triggered!")).start()

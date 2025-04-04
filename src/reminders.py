@@ -30,8 +30,14 @@ def popup():
     """
     Displays a popup reminder window.
     """
+    # Allow popup to be mocked during tests
     if hasattr(popup, "_mock_call"):
-        popup._mock_call()
+        popup._mock_call()  # Trigger mock if set
+        return
+
+    if threading.current_thread() != threading.main_thread():
+        print("Warning: popup called from a non-main thread. Scheduling on the main thread.")
+        tk.Tk().after(0, popup)  # Schedule popup on the main thread using a temporary Tk instance
         return
 
     reminder_window = tk.Tk()
@@ -87,6 +93,7 @@ def show_congratulatory_message(status_label=None):
         "Fantastic progress—keep crushing it!",
     ]
 
+    # Use the test message if set, otherwise pick a random one
     message = TEST_CONGRATULATORY_MESSAGE or random.choice(messages)
 
     if status_label is not None:
