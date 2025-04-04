@@ -158,6 +158,23 @@ class TestSquatsApp(unittest.TestCase):
         update_calendar(test_date)
         mock_schedule.assert_called_once_with(5)  # Verify reminder is scheduled with correct delay
 
+    @timeout(5)
+    @patch("src.ui.progress_label", create=True)
+    @patch("src.ui.status_label", create=True)
+    @patch("src.ui.progress_bar", create=True)
+    def test_schedule_next_reminder_logic(self, mock_progress_bar, mock_status_label, mock_progress_label):
+        test_date = "2025-04-04"
+        tracker_data[test_date] = [True] * len(time_slots)  # Mock all slots as completed
+
+        mock_progress_label.config = Mock()
+        mock_status_label.config = Mock()
+        mock_progress_bar.config = Mock()
+
+        update_calendar(test_date, mock_progress_label, mock_status_label, mock_progress_bar)
+        mock_status_label.config.assert_called_once_with(
+            text="Way to go! You completed your squats for today!", foreground="#006600"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
