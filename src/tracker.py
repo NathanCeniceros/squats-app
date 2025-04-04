@@ -1,11 +1,11 @@
+"""
+Module for tracking squats progress.
+"""
+
 import os
 import json
 from datetime import datetime, timedelta
 from shutil import copyfile
-
-"""
-Module for tracking squats progress.
-"""
 
 # Constants
 TRACKER_FILE = "squats_tracker.json"
@@ -17,6 +17,10 @@ time_slots = [
 ]
 
 class Tracker:
+    """
+    Class for managing squats progress tracking.
+    """
+
     def __init__(self):
         self.tracker_data = {}
         self.load_tracker()
@@ -35,8 +39,7 @@ class Tracker:
             (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
             for i in range(7)
         }
-        self.log_message(f"Initialized tracker data starting from {start_date}. Tracker data: {self.tracker_data}")
-        print(f"Initialized tracker data starting from {start_date}: {self.tracker_data}")
+        self.log_message(f"Initialized tracker data starting from {start_date}.")
         self.save_tracker()
 
     def log_message(self, message):
@@ -47,8 +50,7 @@ class Tracker:
             with open(LOG_FILE, "a", encoding="utf-8") as log:
                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 log.write(f"{timestamp}: {message}\n")
-            print(f"Log message written: {message}")
-        except Exception as e:
+        except (OSError, IOError) as e:
             print(f"Error writing to log file: {e}")
 
     def update_progress(self, date, slot_index):
@@ -103,17 +105,13 @@ class Tracker:
         Creates a backup before overwriting the main file.
         """
         try:
-            # Create a backup of the current tracker file
             if os.path.exists(TRACKER_FILE):
                 copyfile(TRACKER_FILE, BACKUP_FILE)
-                self.log_message(f"Backup created: {BACKUP_FILE}")
 
-            # Write tracker data atomically
             temp_file = f"{TRACKER_FILE}.tmp"
             with open(temp_file, "w", encoding="utf-8") as f:
                 json.dump(self.tracker_data, f, indent=4)
             os.replace(temp_file, TRACKER_FILE)
-            self.log_message(f"Tracker data saved to file: {TRACKER_FILE}. Current tracker data: {self.tracker_data}")
         except PermissionError:
             self.log_message(f"Permission denied when saving to {TRACKER_FILE}.")
         except (OSError, IOError) as e:
@@ -148,7 +146,7 @@ class Tracker:
                 self.log_message("Backup file not found. Reinitializing tracker data.")
                 self.initialize_tracker()
                 self.save_tracker()
-        except Exception as e:
+        except (OSError, IOError) as e:
             self.log_message(f"Error loading tracker data: {e}")
             self.initialize_tracker()  # Fallback to reinitialize tracker data
 

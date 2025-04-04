@@ -32,7 +32,7 @@ jobs:
 
       # Step 4: Check code quality
       - name: Run pylint
-        run: pylint src/
+        run: pylint src/ --fail-under=8.5
 
       # Step 5: Run Unit Tests
       - name: Run Unit Tests
