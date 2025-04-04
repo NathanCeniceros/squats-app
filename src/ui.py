@@ -1,8 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 from tkcalendar import Calendar  # Add tkcalendar for calendar widget
-from src.tracker import time_slots, tracker_data, mark_as_completed, update_progress, initialize_tracker
+from src.tracker import Tracker, time_slots
 from datetime import datetime
+
+# Create a global instance of Tracker
+tracker = Tracker()
 
 progress_label = None  # Declare globally for testing
 current_time_label = None  # Declare globally for testing
@@ -10,26 +13,60 @@ current_time_label = None  # Declare globally for testing
 def update_calendar(selected_date=None, mock_progress_label=None, mock_status_label=None, mock_progress_bar=None):
     date = selected_date or datetime.now().strftime("%Y-%m-%d")
     label = mock_progress_label or progress_label
-    status = mock_status_label or status_label
+    status = mock_status_label or status_label  # Use mock_status_label if provided
     bar = mock_progress_bar or progress_bar
 
-    if date not in tracker_data:
+    if date not in tracker.tracker_data:
         print(f"Warning: No data found for date {date}.")
         label.config(text="No data available for this date.")
-        bar.config(value=0)  # Use config method for progress bar
+        bar.config(value=0)
         status.config(text="No progress yet.", foreground="#333")
         return
 
-    completed_count = sum(tracker_data[date])
+    completed_count = sum(tracker.tracker_data[date])
+    print(f"Debug: Completed count = {completed_count}, Total slots = {len(time_slots)}")
     label.config(text=f"Progress: {completed_count}/{len(time_slots)}")
-    bar.config(value=(completed_count / len(time_slots)) * 100)  # Use config method for progress bar
+    bar.config(value=(completed_count / len(time_slots)) * 100)
 
     if completed_count == len(time_slots):
-        status.config(text="Way to go! You completed your squats for today!", foreground="#006600")
-        schedule_next_reminder(5)  # Schedule a reminder for the next session
+        print("Debug: All squats completed. Calling schedule_next_reminder.")
+        status.config(text="Way to go! You completed your squats for today!", foreground="#006600")  # Update status label
+        schedule_next_reminder(5, mock_status_label=status)  # Pass the correct status label
     else:
+        print("Debug: Squats not yet completed. Updating status label.")
         status.config(text="Keep going!", foreground="#333")
     update_time_slots_list(date)
+
+def update_calendar(date, progress_label, status_label, progress_bar, root=None):
+    """
+    Update the calendar UI with the progress for the given date.
+    """
+    if date not in tracker.tracker_data:
+        print(f"Warning: No data found for date {date}.")
+        progress_label.config(text="No data available for this date.")
+        progress_bar.config(value=0)
+        status_label.config(text="No progress yet.", foreground="#333")
+        return
+
+    completed_count = sum(1 for completed in tracker.tracker_data[date] if completed)
+    progress_text = f"Progress: {completed_count}/{len(time_slots)}"
+    status_text = "Way to go! You completed your squats for today!" if completed_count == len(time_slots) else "Keep going!"
+    status_color = "#006600" if completed_count == len(time_slots) else "#333"
+
+    def update_ui():
+        progress_label.config(text=progress_text)
+        status_label.config(text=status_text, foreground=status_color)
+        progress_bar.config(value=(completed_count / len(time_slots)) * 100)
+
+    if root:
+        root.after(0, update_ui)  # Schedule the UI update on the main thread
+    else:
+        update_ui()  # Directly update if no root is provided (for testing)
+
+    if all(tracker.tracker_data[date]):
+        status_label.config(
+            text="Way to go! You completed your squats for today!", foreground="#006600"
+        )
 
 def update_current_time():
     now = datetime.now().strftime("%I:%M:%S %p")
@@ -37,7 +74,7 @@ def update_current_time():
     root.after(1000, update_current_time)
 
 def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
-    if date not in tracker_data:
+    if date not in tracker.tracker_data:
         print(f"Warning: No data found for date {date}.")
         return
 
@@ -54,7 +91,7 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
     for widget in frame.winfo_children():
         widget.destroy()
 
-    for index, slot_completed in enumerate(tracker_data[date]):
+    for index, slot_completed in enumerate(tracker.tracker_data[date]):
         slot = time_slots[index]
         slot_time = datetime.strptime(slot, "%I:%M %p")
         slot_hour = slot_time.hour
@@ -77,7 +114,7 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
         button = ttk.Button(
             frame,
             text=f"{slot} {status}",
-            command=lambda idx=index: mark_as_completed(date, idx),
+            command=lambda idx=index: tracker.mark_as_completed(date, idx),
             style=button_style
         )
         button.pack(fill="x", pady=2, padx=5)
@@ -114,10 +151,18 @@ def build_main_screen():
     time_slots_frame = ttk.Frame(root)
     time_slots_frame.pack(fill="x", pady=10)
 
-    update_calendar()
+    # Pass required arguments to update_calendar
+    update_calendar(datetime.now().strftime("%Y-%m-%d"), progress_label, status_label, progress_bar, root)
     update_current_time()
     return root
 
-def schedule_next_reminder(delay_minutes):
-    print(f"Scheduling next reminder in {delay_minutes} minutes.")
+def schedule_next_reminder(delay_minutes, mock_status_label=None):
+    print(f"Debug: Scheduling next reminder in {delay_minutes} minutes.")
+    status = mock_status_label or status_label  # Use mock_status_label if provided
+
+    # Update the status label if provided
+    if status:
+        status.config(text="Way to go! You completed your squats for today!", foreground="#006600")
+
     # Add logic to schedule the reminder (e.g., using a timer or external service)
+    threading.Timer(delay_minutes * 60, lambda: print("Reminder triggered!")).start()

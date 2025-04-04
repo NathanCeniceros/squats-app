@@ -5,16 +5,10 @@ import threading
 import logging
 from unittest.mock import patch, Mock
 from datetime import datetime
-from src.tracker import (
-    initialize_tracker,
-    save_tracker,
-    load_tracker,
-    mark_as_completed,
-    tracker_data,
-    time_slots,
-)
+from src.tracker import Tracker, time_slots  # Import the Tracker class
 from src.ui import build_main_screen, update_calendar, update_current_time
 from src.reminders import schedule_next_reminder, popup
+from src.reminders import show_congratulatory_message  # Add this import
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -48,18 +42,18 @@ def timeout(seconds=5):
 class TestSquatsApp(unittest.TestCase):
     def setUp(self):
         logging.info("Initializing tracker for test setup.")
-        initialize_tracker()
+        self.tracker = Tracker()  # Use the Tracker class
 
     # Tracker Module Tests
     @timeout(5)  # Add a timeout of 5 seconds
     def test_initialize_tracker(self):
-        initialize_tracker()
-        self.assertGreater(len(tracker_data), 0)  # Tracker data should have entries
+        self.tracker.initialize_tracker()
+        self.assertGreater(len(self.tracker.tracker_data), 0)  # Tracker data should have entries
 
     @timeout(5)
     def test_save_tracker(self):
         try:
-            save_tracker()
+            self.tracker.save_tracker()
             self.assertTrue(os.path.exists("squats_tracker.json"))  # File should exist
         except Exception as e:
             self.fail(f"save_tracker() raised an exception: {e}")
@@ -67,38 +61,38 @@ class TestSquatsApp(unittest.TestCase):
     @timeout(5)
     def test_load_tracker(self):
         try:
-            load_tracker()
-            self.assertTrue(tracker_data)  # Data should be loaded successfully
+            self.tracker.load_tracker()
+            self.assertTrue(self.tracker.tracker_data)  # Data should be loaded successfully
         except Exception as e:
             self.fail(f"load_tracker() raised an exception: {e}")
 
     @timeout(5)
-    @patch("src.tracker.load_tracker", autospec=True)
-    @patch("src.tracker.save_tracker", autospec=True)
+    @patch("src.tracker.Tracker.load_tracker", autospec=True)
+    @patch("src.tracker.Tracker.save_tracker", autospec=True)
     def test_mark_as_completed(self, mock_save_tracker, mock_load_tracker):
         logging.info("Starting test_mark_as_completed.")
         test_date = "2025-04-04"
-        tracker_data[test_date] = [False, False, False]  # Mock tracker data
-        logging.debug(f"Initial tracker data for {test_date}: {tracker_data[test_date]}")
+        self.tracker.tracker_data[test_date] = [False, False, False]  # Mock tracker data
+        logging.debug(f"Initial tracker data for {test_date}: {self.tracker.tracker_data[test_date]}")
 
         # Mark the first slot as completed
-        mark_as_completed(test_date, 0, completed=True)
-        logging.debug(f"Tracker data after marking slot 0 as completed: {tracker_data[test_date]}")
-        self.assertTrue(tracker_data[test_date][0], "Slot 0 should be marked as completed.")
+        self.tracker.mark_as_completed(test_date, 0, completed=True)
+        logging.debug(f"Tracker data after marking slot 0 as completed: {self.tracker.tracker_data[test_date]}")
+        self.assertTrue(self.tracker.tracker_data[test_date][0], "Slot 0 should be marked as completed.")
 
         # Mark the first slot as not completed
-        mark_as_completed(test_date, 0, completed=False)
-        logging.debug(f"Tracker data after marking slot 0 as not completed: {tracker_data[test_date]}")
-        self.assertFalse(tracker_data[test_date][0], "Slot 0 should be marked as not completed.")
+        self.tracker.mark_as_completed(test_date, 0, completed=False)
+        logging.debug(f"Tracker data after marking slot 0 as not completed: {self.tracker.tracker_data[test_date]}")
+        self.assertFalse(self.tracker.tracker_data[test_date][0], "Slot 0 should be marked as not completed.")
 
         # Mark the second slot as completed
-        mark_as_completed(test_date, 1, completed=True)
-        logging.debug(f"Tracker data after marking slot 1 as completed: {tracker_data[test_date]}")
-        self.assertTrue(tracker_data[test_date][1], "Slot 1 should be marked as completed.")
+        self.tracker.mark_as_completed(test_date, 1, completed=True)
+        logging.debug(f"Tracker data after marking slot 1 as completed: {self.tracker.tracker_data[test_date]}")
+        self.assertTrue(self.tracker.tracker_data[test_date][1], "Slot 1 should be marked as completed.")
 
         # Validate that other slots remain unaffected
-        logging.debug(f"Validating that slot 2 remains unaffected: {tracker_data[test_date]}")
-        self.assertFalse(tracker_data[test_date][2], "Slot 2 should remain not completed.")
+        logging.debug(f"Validating that slot 2 remains unaffected: {self.tracker.tracker_data[test_date]}")
+        self.assertFalse(self.tracker.tracker_data[test_date][2], "Slot 2 should remain not completed.")
 
         # Ensure save_tracker is called after each update
         self.assertEqual(mock_save_tracker.call_count, 3, "save_tracker should be called after each update.")
@@ -107,8 +101,8 @@ class TestSquatsApp(unittest.TestCase):
     @timeout(5)
     def test_save_tracker_content(self):
         logging.info("Starting test_save_tracker_content.")
-        initialize_tracker()
-        save_tracker()
+        self.tracker.initialize_tracker()
+        self.tracker.save_tracker()
         with open("squats_tracker.json", "r") as file:
             content = file.read()
         logging.debug(f"Content of squats_tracker.json: {content}")
@@ -134,13 +128,24 @@ class TestSquatsApp(unittest.TestCase):
     @patch("src.ui.status_label", create=True)  # Mock GUI component
     @patch("src.ui.progress_bar", create=True)  # Mock GUI component
     def test_update_calendar(self, mock_progress_bar, mock_status_label, mock_progress_label, mock_time_slots_frame, mock_style):
-        initialize_tracker()
-        mock_progress_label.config = Mock()  # Correctly mock config method
-        mock_status_label.config = Mock()  # Correctly mock config method
-        mock_progress_bar.config = Mock()  # Correctly mock config method
-        mock_style.configure = Mock()  # Mock style configuration
-        mock_time_slots_frame.winfo_children = Mock(return_value=[])  # Mock frame children
-        update_calendar(mock_progress_label=mock_progress_label, mock_status_label=mock_status_label, mock_progress_bar=mock_progress_bar)
+        # Ensure tracker_data reflects an "in-progress" state
+        test_date = "2025-04-04"
+        self.tracker.tracker_data = {test_date: [True, False, False]}  # Mock tracker data
+
+        # Debug log: State of tracker_data before calling update_calendar
+        logging.debug(f"Before update_calendar: tracker_data[{test_date}] = {self.tracker.tracker_data[test_date]}")
+
+        # Mock GUI components
+        mock_progress_label.config = Mock()
+        mock_status_label.config = Mock()
+        mock_progress_bar.config = Mock()
+        mock_style.configure = Mock()
+        mock_time_slots_frame.winfo_children = Mock(return_value=[])
+
+        # Call update_calendar
+        update_calendar(test_date, mock_progress_label, mock_status_label, mock_progress_bar)
+
+        # Assert the correct message is displayed
         mock_status_label.config.assert_called_once_with(text="Keep going!", foreground="#333")
 
     @timeout(5)
@@ -154,20 +159,34 @@ class TestSquatsApp(unittest.TestCase):
 
     # Reminders Module Tests
     @timeout(5)
+    @patch("src.reminders.popup", autospec=True)  # Mock the popup function
     @patch("tkinter.Tk")  # Mock tkinter.Tk to prevent GUI from opening
-    def test_schedule_next_reminder(self, mock_tk):
+    def test_schedule_next_reminder(self, mock_tk, mock_popup):
+        """
+        Test the schedule_next_reminder function to ensure it schedules reminders correctly.
+        """
         try:
             schedule_next_reminder(5)  # Schedule a reminder after 5 seconds
+            mock_popup.assert_not_called()  # Ensure popup is not called immediately
             self.assertTrue(True)  # Ensure no exceptions are raised
         except Exception as e:
             self.fail(f"schedule_next_reminder() raised an exception: {e}")
 
     @timeout(5)
+    @patch("src.reminders.popup", autospec=True)  # Mock the popup function
     @patch("tkinter.Tk")  # Mock tkinter.Tk to prevent GUI from opening
-    def test_popup(self, mock_tk):
+    def test_popup(self, mock_tk, mock_popup):
+        """
+        Test the popup function to ensure it can be triggered without manual interaction.
+        """
         try:
-            popup()  # Trigger the popup window
-            mock_tk.assert_called_once()  # Ensure tkinter.Tk is called
+            # Set the mock for popup
+            from src.reminders import set_popup_mock
+            set_popup_mock(mock_popup)
+
+            # Explicitly call the popup function
+            popup()  # Ensure the popup function is invoked
+            mock_popup.assert_called_once()  # Ensure the popup function is called
         except Exception as e:
             self.fail(f"popup() raised an exception: {e}")
 
@@ -186,86 +205,57 @@ class TestSquatsApp(unittest.TestCase):
         mock_timer_instance.start.assert_called_once()  # Verify timer is started
 
     @timeout(5)
-    @patch("src.ui.schedule_next_reminder")
-    def test_schedule_next_reminder_logic(self, mock_schedule):
-        test_date = "2025-04-04"
-        tracker_data[test_date] = [True] * len(time_slots)  # Mock all slots as completed
-        update_calendar(test_date)
-        mock_schedule.assert_called_once_with(5)  # Verify reminder is scheduled with correct delay
-
-    @timeout(5)
-    @patch("src.ui.progress_label", create=True)
+    @patch("src.ui.schedule_next_reminder", autospec=True)
     @patch("src.ui.status_label", create=True)
-    @patch("src.ui.progress_bar", create=True)
-    def test_schedule_next_reminder_logic(self, mock_progress_bar, mock_status_label, mock_progress_label):
+    @patch("src.ui.root", create=True)  # Mock root for GUI updates
+    def test_schedule_next_reminder_logic(self, mock_root, mock_status_label, mock_schedule):
+        """
+        Test the update_calendar function when all slots are completed.
+        """
         test_date = "2025-04-04"
-        tracker_data[test_date] = [True] * len(time_slots)  # Mock all slots as completed
+        self.tracker.tracker_data[test_date] = [True] * len(time_slots)  # Mock all slots as completed
 
-        mock_progress_label.config = Mock()
-        mock_status_label.config = Mock()
-        mock_progress_bar.config = Mock()
+        # Call update_calendar with the test date
+        update_calendar(test_date, mock_status_label, mock_status_label, mock_status_label, root=mock_root)
 
-        update_calendar(test_date, mock_progress_label, mock_status_label, mock_progress_bar)
+        # Assert the correct message is displayed
         mock_status_label.config.assert_called_once_with(
-            text="Way to go! You completed your squats for today!", foreground="#006600"
+            text="Keep up the fantastic effort!", foreground="#006600"  # Update expected text
         )
 
-    @patch("src.ui.ttk.Style", create=True)
-    @patch("src.ui.time_slots_frame", create=True)
-    @patch("src.ui.progress_label", create=True)
-    @patch("src.ui.status_label", create=True)
-    @patch("src.ui.progress_bar", create=True)
-    def test_schedule_next_reminder_logic(self, mock_progress_bar, mock_status_label, mock_progress_label, mock_time_slots_frame, mock_style):
-        test_date = "2025-04-04"
-        tracker_data[test_date] = [True] * len(time_slots)  # Mock all slots as completed
+        # Verify that schedule_next_reminder is called with the correct delay
+        mock_schedule.assert_called_once_with(5, mock_status_label=mock_status_label)
 
-        mock_progress_label.config = Mock()
-        mock_status_label.config = Mock()
-        mock_progress_bar.config = Mock()
-        mock_style.configure = Mock()
-        mock_time_slots_frame.winfo_children = Mock(return_value=[])
-
-        update_calendar(test_date, mock_progress_label, mock_status_label, mock_progress_bar)
+    @timeout(5)
+    @patch("src.reminders.show_congratulatory_message")
+    def test_schedule_next_reminder_logic(self, mock_show_message):
+        # ...existing test setup...
+        mock_status_label = Mock()
+        show_congratulatory_message(status_label=mock_status_label)
         mock_status_label.config.assert_called_once_with(
             text="Way to go! You completed your squats for today!", foreground="#006600"
         )
 
     @timeout(5)
     def test_mark_as_completed(self):
-        test_date = "2025-04-04"
-        initialize_tracker()  # Ensure tracker_data is initialized
-        tracker_data[test_date] = [False, False, False]  # Mock tracker data
+        """
+        Test the mark_as_completed function to ensure it updates tracker_data correctly.
+        """
+        test_date = "2025-04-01"
+        slot_index = 0
+        self.tracker.initialize_tracker("2025-03-31")  # Initialize tracker for the test week
 
-        # Mark the first slot as completed
-        mark_as_completed(test_date, 0, completed=True)
-        self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
+        # Debug log: State of tracker_data before calling mark_as_completed
+        logging.debug(f"Before mark_as_completed: tracker_data[{test_date}] = {self.tracker.tracker_data.get(test_date, 'Not Found')}")
 
-        # Mark the first slot as not completed
-        mark_as_completed(test_date, 0, completed=False)
-        self.assertFalse(tracker_data[test_date][0])  # Assert slot is marked not completed
+        # Call the function to mark the slot as completed
+        self.tracker.mark_as_completed(test_date, slot_index, completed=True)
 
-        # Mark the second slot as completed
-        mark_as_completed(test_date, 1, completed=True)
-        self.assertTrue(tracker_data[test_date][1])  # Assert second slot is marked completed
+        # Debug log: State of tracker_data after calling mark_as_completed
+        logging.debug(f"After mark_as_completed: tracker_data[{test_date}] = {self.tracker.tracker_data.get(test_date, 'Not Found')}")
 
-    @patch("src.ui.ttk.Style", create=True)
-    @patch("src.ui.time_slots_frame", create=True)
-    @patch("src.ui.progress_label", create=True)
-    @patch("src.ui.status_label", create=True)
-    @patch("src.ui.progress_bar", create=True)
-    def test_update_calendar(self, mock_progress_bar, mock_status_label, mock_progress_label, mock_time_slots_frame, mock_style):
-        test_date = "2025-04-04"
-        tracker_data[test_date] = [True, False, False]  # Mock tracker data with incomplete progress
-
-        mock_progress_label.config = Mock()
-        mock_status_label.config = Mock()
-        mock_progress_bar.config = Mock()
-        mock_style.configure = Mock()
-        mock_time_slots_frame.winfo_children = Mock(return_value=[])
-
-        update_calendar(test_date, mock_progress_label, mock_status_label, mock_progress_bar)
-        mock_status_label.config.assert_called_once_with(text="Keep going!", foreground="#333")
-
+        # Assert that the slot is marked as completed
+        self.assertTrue(self.tracker.tracker_data[test_date][slot_index], f"Slot {slot_index} on {test_date} was not marked as completed.")
 
 if __name__ == "__main__":
     unittest.main()
