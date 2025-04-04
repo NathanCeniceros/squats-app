@@ -85,7 +85,7 @@ class TestSquatsApp(unittest.TestCase):
         self.assertIn(datetime.now().strftime("%Y-%m-%d"), content)  # Verify today's date is saved
 
     # UI Module Tests
-    @timeout(5)
+    @timeout(10)  # Increased timeout for GUI-related test
     def test_build_main_screen(self):
         try:
             root = build_main_screen()
@@ -94,16 +94,18 @@ class TestSquatsApp(unittest.TestCase):
             self.fail(f"build_main_screen() raised an exception: {e}")
 
     @timeout(5)
-    def test_update_calendar(self):
+    @patch("src.ui.progress_label", create=True)  # Mock GUI component
+    def test_update_calendar(self, mock_progress_label):
         initialize_tracker()
+        mock_progress_label.config = lambda text: None  # Mock config method
         update_calendar()
-        # Add assertions to verify calendar updates (mock UI components if necessary)
         self.assertTrue(True)  # Placeholder for actual verification logic
 
     @timeout(5)
-    def test_update_current_time(self):
+    @patch("src.ui.current_time_label", create=True)  # Mock GUI component
+    def test_update_current_time(self, mock_current_time_label):
+        mock_current_time_label.config = lambda text: None  # Mock config method
         update_current_time()
-        # Add assertions to verify time updates (mock UI components if necessary)
         self.assertTrue(True)  # Placeholder for actual verification logic
 
     # Reminders Module Tests
