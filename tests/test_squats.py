@@ -72,7 +72,8 @@ class TestSquatsApp(unittest.TestCase):
     def test_mark_as_completed(self):
         initialize_tracker()
         test_date = datetime.now().strftime("%Y-%m-%d")
-        tracker_data[test_date] = [False] * len(time_slots)  # Ensure tracker_data is initialized
+        if test_date not in tracker_data:
+            tracker_data[test_date] = [False] * len(time_slots)  # Ensure tracker_data is initialized
         mark_as_completed(test_date, 0)
         self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
         self.assertFalse(tracker_data[test_date][1])  # Assert other slots remain unmarked
