@@ -1,10 +1,12 @@
 import os
 import json
 from datetime import datetime, timedelta
+from shutil import copyfile
 
 # Constants
 TRACKER_FILE = "squats_tracker.json"
-LOG_FILE = "squats_log.txt"  # Add this constant to define the log file path
+BACKUP_FILE = "squats_tracker_backup.json"  # Backup file for robustness
+LOG_FILE = "squats_log.txt"
 time_slots = [
     "8:00 AM", "8:45 AM", "9:30 AM", "10:15 AM", "11:00 AM", "11:45 AM",
     "12:30 PM", "1:15 PM", "2:00 PM", "2:45 PM", "3:30 PM", "4:15 PM", "5:00 PM"
@@ -86,24 +88,34 @@ def mark_as_completed(date, slot_index, completed=True):
     # Save the updated tracker data
     save_tracker()
 
-# Function to save tracker data to a JSON file
+# Function to save tracker data to a JSON file with backup
 def save_tracker():
     """
     Saves the tracker data to a JSON file for persistence.
+    Creates a backup before overwriting the main file.
     """
     try:
-        with open(TRACKER_FILE, "w") as f:
+        # Create a backup of the current tracker file
+        if os.path.exists(TRACKER_FILE):
+            copyfile(TRACKER_FILE, BACKUP_FILE)
+            print(f"Backup created: {BACKUP_FILE}")
+
+        # Write tracker data atomically
+        temp_file = f"{TRACKER_FILE}.tmp"
+        with open(temp_file, "w") as f:
             json.dump(tracker_data, f, indent=4)
+        os.replace(temp_file, TRACKER_FILE)
         print(f"Tracker data saved to file: {TRACKER_FILE}")
     except PermissionError:
         print(f"Error: Permission denied when trying to save to {TRACKER_FILE}.")
     except Exception as e:
         print(f"Error saving tracker data: {e}")
 
-# Function to load tracker data from a JSON file
+# Function to load tracker data from a JSON file with validation
 def load_tracker():
     """
     Loads tracker data from a JSON file for persistence.
+    Falls back to the backup file if the main file is corrupted.
     """
     global tracker_data
     try:
@@ -111,14 +123,25 @@ def load_tracker():
             with open(TRACKER_FILE, "r") as f:
                 tracker_data = json.load(f)
             print(f"Tracker data loaded from file: {tracker_data}")
+        elif os.path.exists(BACKUP_FILE):
+            print("Main tracker file not found. Attempting to load from backup.")
+            with open(BACKUP_FILE, "r") as f:
+                tracker_data = json.load(f)
+            print(f"Tracker data loaded from backup: {tracker_data}")
         else:
-            print("Tracker file not found, initializing and saving new tracker data.")
+            print("No tracker file found. Initializing new tracker data.")
             initialize_tracker()
             save_tracker()
     except json.JSONDecodeError:
-        print("Error: Tracker file is corrupted. Reinitializing tracker data.")
-        initialize_tracker()
-        save_tracker()
+        print("Error: Tracker file is corrupted. Attempting to load from backup.")
+        if os.path.exists(BACKUP_FILE):
+            with open(BACKUP_FILE, "r") as f:
+                tracker_data = json.load(f)
+            print(f"Tracker data loaded from backup: {tracker_data}")
+        else:
+            print("Backup file not found. Reinitializing tracker data.")
+            initialize_tracker()
+            save_tracker()
     except Exception as e:
         print(f"Error loading tracker data: {e}")
         initialize_tracker()  # Fallback to reinitialize tracker data
