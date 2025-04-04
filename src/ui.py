@@ -5,7 +5,7 @@ Module for handling the user interface of the squats app.
 import threading
 from datetime import datetime
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from tkcalendar import Calendar
 from src.tracker import Tracker, time_slots
 import os
@@ -43,10 +43,12 @@ def update_calendar(date, progress_label, status_label, progress_bar, root=None)
     )
     status_color = "#006600" if completed_count == len(time_slots) else "#333"
 
+    progress_percentage = (completed_count / len(time_slots)) * 100
+
     def update_ui():
         progress_label.config(text=progress_text)
         status_label.config(text=status_text, foreground=status_color)
-        progress_bar.config(value=(completed_count / len(time_slots)) * 100)
+        progress_bar.config(value=progress_percentage)
 
     if root:
         root.after(0, update_ui)
@@ -124,10 +126,13 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
 
 def mark_squat_as_completed(date, slot_index):
     """
-    Marks a squat as completed for the given date and time slot.
+    Toggles the completion status of a squat for the given date and time slot.
     """
-    tracker.mark_as_completed(date, slot_index)
+    tracker.tracker_data[date][slot_index] = not tracker.tracker_data[date][slot_index]
     update_time_slots_list(date)
+    update_calendar(date, PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
+    status = "completed" if tracker.tracker_data[date][slot_index] else "not completed"
+    messagebox.showinfo("Status Updated", f"Time slot {time_slots[slot_index]} marked as {status}.")
 
 
 def on_date_selected(event):
@@ -135,7 +140,7 @@ def on_date_selected(event):
     Handles the event when a date is selected in the calendar.
     """
     selected_date = CALENDAR.selection_get().strftime("%Y-%m-%d")
-    update_calendar(selected_date)
+    update_calendar(selected_date, PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
     update_time_slots_list(selected_date)
 
 
@@ -143,7 +148,18 @@ def change_calendar_view(*args):
     """
     Changes the calendar view mode based on the dropdown selection.
     """
-    print(f"Changing calendar view to: {VIEW_MODE.get()}")
+    view_mode = VIEW_MODE.get()
+    if view_mode == "day":
+        CALENDAR.config(selectmode="day")
+    elif view_mode == "week":
+        messagebox.showinfo("Info", "Week view is not implemented yet.")
+    elif view_mode == "month":
+        messagebox.showinfo("Info", "Month view is not implemented yet.")
+    elif view_mode == "year":
+        messagebox.showinfo("Info", "Year view is not implemented yet.")
+    else:
+        messagebox.showerror("Error", f"Unknown view mode: {view_mode}")
+    print(f"Changed calendar view to: {view_mode}")
 
 
 def build_main_screen():
