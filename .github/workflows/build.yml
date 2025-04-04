@@ -52,6 +52,14 @@ jobs:
           cd ${{ github.workspace }}
           pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py --name=squats
 
+      - name: Verify build output
+        run: |
+          ls -R dist/
+
+      - name: Test executable startup
+        run: |
+          ./dist/squats.exe
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
