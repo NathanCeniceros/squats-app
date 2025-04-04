@@ -49,7 +49,7 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --onefile --noconsole --icon=squat-icon.ico squats.py  # Shell command to build executable
+          pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py  # Shell command to build executable
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4  # Defines an external action for uploading artifacts
