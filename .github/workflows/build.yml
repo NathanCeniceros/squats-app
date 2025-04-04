@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Switch to Windows runner
 
     steps:
       - name: Checkout code
@@ -31,7 +31,7 @@ jobs:
           pyinstaller --onefile --noconsole --icon=squat-icon.ico squats.py
 
       - name: List files in dist directory (Debug)
-        run: ls -la dist
+        run: dir dist  # Equivalent of `ls` for Windows
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
