@@ -14,44 +14,44 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Defines an external action for checking out code
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3  # Defines an external action for setting up Python
         with:
           python-version: 3.x
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pyinstaller
+          pip install pytest pyinstaller  # Shell command to install dependencies
 
       - name: Run Unit Tests
         run: |
-          pytest test_squats.py
+          pytest tests/test_squats.py  # Shell command to execute tests
 
       - name: Build executable (Windows)
         runs-on: windows-latest  # Switch to Windows for the build
         steps:
           - name: Checkout code
-            uses: actions/checkout@v3
+            uses: actions/checkout@v3  # Defines an external action for checking out code
 
           - name: Set up Python
-            uses: actions/setup-python@v3
+            uses: actions/setup-python@v3  # Defines an external action for setting up Python
             with:
               python-version: 3.x
 
           - name: Install dependencies
             run: |
               python -m pip install --upgrade pip
-              pip install pyinstaller
+              pip install pyinstaller  # Shell command to install dependencies
 
           - name: Build executable
             run: |
-              pyinstaller --onefile --noconsole --icon=squat-icon.ico squats.py
+              pyinstaller --onefile --noconsole --icon=squat-icon.ico squats.py  # Shell command to build executable
 
           - name: Upload artifact
-            uses: actions/upload-artifact@v4
+            uses: actions/upload-artifact@v4  # Defines an external action for uploading artifacts
             with:
               name: squats-executable
               path: dist/squats.exe
