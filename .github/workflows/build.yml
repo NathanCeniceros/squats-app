@@ -30,14 +30,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pylint tkcalendar
 
-      # Step 4: Run Unit Tests
+      # Step 4: Check code quality
+      - name: Run pylint
+        run: pylint src/
+
+      # Step 5: Run Unit Tests
       - name: Run Unit Tests
         run: python -m unittest discover -s tests
         continue-on-error: true  # Explicitly fail on test failures
-
-      # Step 5: Check code quality
-      - name: Run pylint
-        run: pylint src/
 
   build:
     runs-on: windows-latest

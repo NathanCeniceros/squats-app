@@ -40,7 +40,7 @@ class Tracker:
         Logs a message to the log file with a timestamp.
         """
         try:
-            with open(LOG_FILE, "a") as log:
+            with open(LOG_FILE, "a", encoding="utf-8") as log:
                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 log.write(f"{timestamp}: {message}\n")
             print(f"Log message written: {message}")
@@ -106,7 +106,7 @@ class Tracker:
 
             # Write tracker data atomically
             temp_file = f"{TRACKER_FILE}.tmp"
-            with open(temp_file, "w") as f:
+            with open(temp_file, "w", encoding="utf-8") as f:
                 json.dump(self.tracker_data, f, indent=4)
             os.replace(temp_file, TRACKER_FILE)
             self.log_message(f"Tracker data saved to file: {TRACKER_FILE}. Current tracker data: {self.tracker_data}")
@@ -124,12 +124,12 @@ class Tracker:
         """
         try:
             if os.path.exists(TRACKER_FILE):
-                with open(TRACKER_FILE, "r") as f:
+                with open(TRACKER_FILE, "r", encoding="utf-8") as f:
                     self.tracker_data = json.load(f)
                 self.log_message(f"Tracker data loaded from file: {self.tracker_data}")
             elif os.path.exists(BACKUP_FILE):
                 self.log_message("Main tracker file not found. Attempting to load from backup.")
-                with open(BACKUP_FILE, "r") as f:
+                with open(BACKUP_FILE, "r", encoding="utf-8") as f:
                     self.tracker_data = json.load(f)
                 self.log_message(f"Tracker data loaded from backup: {self.tracker_data}")
             else:
@@ -139,7 +139,7 @@ class Tracker:
         except json.JSONDecodeError:
             self.log_message("Error: Tracker file is corrupted. Attempting to load from backup.")
             if os.path.exists(BACKUP_FILE):
-                with open(BACKUP_FILE, "r") as f:
+                with open(BACKUP_FILE, "r", encoding="utf-8") as f:
                     self.tracker_data = json.load(f)
                 self.log_message(f"Tracker data loaded from backup: {self.tracker_data}")
             else:
@@ -168,7 +168,7 @@ class Tracker:
             self.log_message(f"Tracker data reset for the week starting {start_date}. Tracker data: {self.tracker_data}")
             self.save_tracker()
             print(f"Tracker data reset for the week starting {start_date}.")
-        except ValueError:
+        except ValueError as e:
             self.log_message(f"Error: Invalid start_date format '{start_date}'. Expected format: YYYY-MM-DD.")
             print(f"Error: Invalid start_date format '{start_date}'. Expected format: YYYY-MM-DD.")
 
