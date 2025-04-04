@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkcalendar import Calendar
 from src.tracker import Tracker, time_slots
+import os
 
 # Initialize global variables
 ROOT = None
@@ -154,8 +155,12 @@ def build_main_screen():
     ROOT.title("Squats Tracker")
     ROOT.configure(bg="#f0f8ff")  # Light blue background for a fun and approachable look
 
-    # Set the application icon to the squatting person icon
-    ROOT.iconbitmap("squat-icon.ico")
+    # Set the application icon to the squatting person icon if it exists
+    icon_path = "squat-icon.ico"
+    if os.path.exists(icon_path):
+        ROOT.iconbitmap(icon_path)
+    else:
+        print(f"Warning: Icon file '{icon_path}' not found. Skipping icon setup.")
 
     # Initialize VIEW_MODE after ROOT is created
     VIEW_MODE = tk.StringVar(value="day")  # Default calendar view mode

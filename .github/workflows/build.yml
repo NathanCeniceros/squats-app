@@ -63,7 +63,7 @@ jobs:
       # Step 4: Build executable
       - name: Build executable
         run: |
-          pyinstaller --onefile --noconsole --icon=squat-icon.ico --name=squats main.py
+          pyinstaller --onefile --noconsole --icon=squat-icon.ico --name=squats main.py --add-data "squat-icon.ico;."
 
       # Step 5: Verify build output
       - name: Verify build directory
