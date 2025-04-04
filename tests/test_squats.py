@@ -43,6 +43,9 @@ def timeout(seconds=5):
     return decorator
 
 class TestSquatsApp(unittest.TestCase):
+    def setUp(self):
+        initialize_tracker()
+
     # Tracker Module Tests
     @timeout(5)  # Add a timeout of 5 seconds
     def test_initialize_tracker(self):
@@ -99,6 +102,14 @@ class TestSquatsApp(unittest.TestCase):
         mock_progress_bar.__setitem__ = lambda self, key, value: None  # Correctly mock __setitem__
         update_calendar()
         self.assertTrue(True)  # Placeholder for actual verification logic
+
+    @timeout(5)
+    @patch("src.ui.status_label", create=True)  # Mock GUI component
+    def test_update_calendar(self, mock_status_label):
+        initialize_tracker()
+        mock_status_label.config = lambda **kwargs: None  # Mock config method
+        update_calendar()
+        mock_status_label.config.assert_called_once_with(text="Keep going!", foreground="#333")
 
     @timeout(5)
     @patch("src.ui.current_time_label", create=True)  # Mock GUI component
