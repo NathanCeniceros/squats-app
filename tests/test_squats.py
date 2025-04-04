@@ -71,6 +71,7 @@ class TestSquatsApp(unittest.TestCase):
     @timeout(5)
     def test_mark_as_completed(self):
         test_date = "2025-04-04"
+        initialize_tracker()  # Ensure tracker_data is initialized
         tracker_data[test_date] = [False, False, False]  # Mock tracker data
         mark_as_completed(test_date, 0)
         self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
@@ -198,6 +199,7 @@ class TestSquatsApp(unittest.TestCase):
     @timeout(5)
     def test_mark_as_completed(self):
         test_date = "2025-04-04"
+        initialize_tracker()  # Ensure tracker_data is initialized
         tracker_data[test_date] = [False, False, False]  # Mock tracker data
         mark_as_completed(test_date, 0)
         self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed

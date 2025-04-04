@@ -73,9 +73,8 @@ def mark_as_completed(date, slot_index):
         print(f"Error: Slot index {slot_index} is out of range.")
         return
 
-    tracker_data[date][slot_index] = not tracker_data[date][slot_index]  # Toggle completion status
-    action = "completed" if tracker_data[date][slot_index] else "undid"
-    log_message(f"User {action} squats for {time_slots[slot_index]} on {date}.")
+    tracker_data[date][slot_index] = True  # Ensure the slot is marked as completed
+    log_message(f"User completed squats for {time_slots[slot_index]} on {date}.")
 
     save_tracker()  # Save changes to the tracker file
 
