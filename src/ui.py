@@ -35,7 +35,7 @@ def update_current_time():
     current_time_label.config(text=f"Current Time: {now}")
     root.after(1000, update_current_time)
 
-def update_time_slots_list(date):
+def update_time_slots_list(date, mock_style=None):
     if date not in tracker_data:
         print(f"Warning: No data found for date {date}.")
         return
@@ -44,7 +44,7 @@ def update_time_slots_list(date):
     current_hour = current_time.hour
     current_minute = current_time.minute
 
-    style = ttk.Style()
+    style = mock_style or ttk.Style()  # Use mock style if provided
     style.configure("Completed.TButton", foreground="#006600")
     style.configure("Missed.TButton", foreground="#990000")
     style.configure("Current.TButton", foreground="#3333FF", font=("Helvetica", 10, "bold"))
