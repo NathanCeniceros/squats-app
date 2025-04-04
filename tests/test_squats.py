@@ -1,6 +1,7 @@
 import unittest
 import os
 import signal
+import threading
 from unittest.mock import patch
 from datetime import datetime
 from src.tracker import (
@@ -20,16 +21,24 @@ class TimeoutException(Exception):
 
 def timeout(seconds=5):
     def decorator(func):
-        def _handle_timeout(signum, frame):
-            raise TimeoutException(f"Test timed out after {seconds} seconds")
-
         def wrapper(*args, **kwargs):
-            signal.signal(signal.SIGALRM, _handle_timeout)
-            signal.alarm(seconds)
-            try:
-                return func(*args, **kwargs)
-            finally:
-                signal.alarm(0)  # Disable the alarm
+            result = [None]
+            exception = [None]
+
+            def target():
+                try:
+                    result[0] = func(*args, **kwargs)
+                except Exception as e:
+                    exception[0] = e
+
+            thread = threading.Thread(target=target)
+            thread.start()
+            thread.join(seconds)
+            if thread.is_alive():
+                raise TimeoutException(f"Test timed out after {seconds} seconds")
+            if exception[0]:
+                raise exception[0]
+            return result[0]
         return wrapper
     return decorator
 
