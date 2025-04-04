@@ -75,6 +75,7 @@ class TestSquatsApp(unittest.TestCase):
         tracker_data[test_date] = [False] * len(time_slots)  # Ensure tracker_data is initialized
         mark_as_completed(test_date, 0)
         self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
+        self.assertFalse(tracker_data[test_date][1])  # Assert other slots remain unmarked
 
     @timeout(5)
     def test_save_tracker_content(self):
@@ -138,7 +139,7 @@ class TestSquatsApp(unittest.TestCase):
             self.fail(f"popup() raised an exception: {e}")
 
     @timeout(5)
-    @patch("src.reminders.schedule_next_reminder", create=True)
+    @patch("src.reminders.schedule_next_reminder", autospec=True)
     def test_schedule_next_reminder_logic(self, mock_schedule):
         schedule_next_reminder(5)
         mock_schedule.assert_called_once_with(5)  # Verify reminder is scheduled with correct delay
