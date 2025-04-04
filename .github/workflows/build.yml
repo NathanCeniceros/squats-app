@@ -56,4 +56,4 @@ jobs:
         uses: actions/upload-artifact@v4  # Defines an external action for uploading artifacts
         with:
           name: squats-executable
-          path: dist/squats.exe
+          path: squats-app/dist/squats.exe
