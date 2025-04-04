@@ -16,6 +16,14 @@ def initialize_tracker():
         for i in range(7)
     }
 
+def update_progress(date, slot_index):
+    """
+    Updates the progress for a specific time slot on the given date.
+    """
+    if date in tracker_data and 0 <= slot_index < len(time_slots):
+        tracker_data[date][slot_index] = True  # Mark the slot as completed
+        save_tracker()  # Save progress to the tracker file
+
 def mark_as_completed(date, slot_index):
     """
     Toggles the completion status of a specific time slot for the given date.
