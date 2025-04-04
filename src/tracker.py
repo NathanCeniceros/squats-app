@@ -29,7 +29,7 @@ def initialize_tracker(start_date=None):
         (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
         for i in range(7)
     }
-    log_message(f"Initialized tracker data starting from {start_date}.")
+    log_message(f"Initialized tracker data starting from {start_date}. Tracker data: {tracker_data}")
     print(f"Initialized tracker data starting from {start_date}: {tracker_data}")
 
 # Function to log messages to a file
@@ -51,14 +51,16 @@ def update_progress(date, slot_index):
     Updates the progress for a specific time slot on the given date.
     """
     if date not in tracker_data:
+        log_message(f"Error: Date {date} is not in the tracker data.")
         print(f"Error: Date {date} is not in the tracker data.")
         return
     if not (0 <= slot_index < len(time_slots)):
+        log_message(f"Error: Slot index {slot_index} is out of range.")
         print(f"Error: Slot index {slot_index} is out of range.")
         return
 
     tracker_data[date][slot_index] = True  # Mark the slot as completed
-    log_message(f"Progress updated for {date}, slot {slot_index}.")
+    log_message(f"Progress updated for {date}, slot {slot_index}. Current tracker data: {tracker_data[date]}")
     save_tracker()
 
 # Function to toggle completion status for a time slot
@@ -75,15 +77,17 @@ def mark_as_completed(date, slot_index, completed=True):
     # Ensure the date exists in tracker_data
     if date not in tracker_data:
         tracker_data[date] = [False] * len(time_slots)
+        log_message(f"Date {date} not found in tracker data. Initialized with default values.")
 
     # Validate the slot index
     if not (0 <= slot_index < len(time_slots)):
+        log_message(f"Error: Slot index {slot_index} is out of range.")
         raise ValueError(f"Slot index {slot_index} is out of range.")
 
     # Update the completion status
     tracker_data[date][slot_index] = completed
     action = "completed" if completed else "not completed"
-    log_message(f"User marked slot {slot_index} on {date} as {action}.")
+    log_message(f"User marked slot {slot_index} on {date} as {action}. Current tracker data: {tracker_data[date]}")
 
     # Save the updated tracker data
     save_tracker()
@@ -98,17 +102,19 @@ def save_tracker():
         # Create a backup of the current tracker file
         if os.path.exists(TRACKER_FILE):
             copyfile(TRACKER_FILE, BACKUP_FILE)
-            print(f"Backup created: {BACKUP_FILE}")
+            log_message(f"Backup created: {BACKUP_FILE}")
 
         # Write tracker data atomically
         temp_file = f"{TRACKER_FILE}.tmp"
         with open(temp_file, "w") as f:
             json.dump(tracker_data, f, indent=4)
         os.replace(temp_file, TRACKER_FILE)
-        print(f"Tracker data saved to file: {TRACKER_FILE}")
+        log_message(f"Tracker data saved to file: {TRACKER_FILE}. Current tracker data: {tracker_data}")
     except PermissionError:
+        log_message(f"Error: Permission denied when trying to save to {TRACKER_FILE}.")
         print(f"Error: Permission denied when trying to save to {TRACKER_FILE}.")
     except Exception as e:
+        log_message(f"Error saving tracker data: {e}")
         print(f"Error saving tracker data: {e}")
 
 # Function to load tracker data from a JSON file with validation
@@ -122,28 +128,28 @@ def load_tracker():
         if os.path.exists(TRACKER_FILE):
             with open(TRACKER_FILE, "r") as f:
                 tracker_data = json.load(f)
-            print(f"Tracker data loaded from file: {tracker_data}")
+            log_message(f"Tracker data loaded from file: {tracker_data}")
         elif os.path.exists(BACKUP_FILE):
-            print("Main tracker file not found. Attempting to load from backup.")
+            log_message("Main tracker file not found. Attempting to load from backup.")
             with open(BACKUP_FILE, "r") as f:
                 tracker_data = json.load(f)
-            print(f"Tracker data loaded from backup: {tracker_data}")
+            log_message(f"Tracker data loaded from backup: {tracker_data}")
         else:
-            print("No tracker file found. Initializing new tracker data.")
+            log_message("No tracker file found. Initializing new tracker data.")
             initialize_tracker()
             save_tracker()
     except json.JSONDecodeError:
-        print("Error: Tracker file is corrupted. Attempting to load from backup.")
+        log_message("Error: Tracker file is corrupted. Attempting to load from backup.")
         if os.path.exists(BACKUP_FILE):
             with open(BACKUP_FILE, "r") as f:
                 tracker_data = json.load(f)
-            print(f"Tracker data loaded from backup: {tracker_data}")
+            log_message(f"Tracker data loaded from backup: {tracker_data}")
         else:
-            print("Backup file not found. Reinitializing tracker data.")
+            log_message("Backup file not found. Reinitializing tracker data.")
             initialize_tracker()
             save_tracker()
     except Exception as e:
-        print(f"Error loading tracker data: {e}")
+        log_message(f"Error loading tracker data: {e}")
         initialize_tracker()  # Fallback to reinitialize tracker data
 
 # Function to reset tracker data for a new week
@@ -163,10 +169,11 @@ def reset_weekly_data(start_date=None):
             (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
             for i in range(7)
         }
-        log_message(f"Tracker data reset for the week starting {start_date}.")
+        log_message(f"Tracker data reset for the week starting {start_date}. Tracker data: {tracker_data}")
         save_tracker()
         print(f"Tracker data reset for the week starting {start_date}.")
     except ValueError:
+        log_message(f"Error: Invalid start_date format '{start_date}'. Expected format: YYYY-MM-DD.")
         print(f"Error: Invalid start_date format '{start_date}'. Expected format: YYYY-MM-DD.")
 
 def print_tracker_data():
