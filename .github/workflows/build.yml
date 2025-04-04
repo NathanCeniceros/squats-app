@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: windows-latest  # Switch to Windows runner
+  test_and_build:
+    runs-on: ubuntu-latest  # Use Ubuntu for testing, Windows for build
 
     steps:
       - name: Checkout code
@@ -24,17 +24,34 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller
+          pip install pytest pyinstaller
 
-      - name: Build executable
+      - name: Run Unit Tests
         run: |
-          pyinstaller --onefile --noconsole --icon=squat-icon.ico squats.py
+          pytest test_squats.py
 
-      - name: List files in dist directory (Debug)
-        run: dir dist  # Equivalent of `ls` for Windows
+      - name: Build executable (Windows)
+        runs-on: windows-latest  # Switch to Windows for the build
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v3
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: squats-executable
-          path: dist/squats.exe
+          - name: Set up Python
+            uses: actions/setup-python@v3
+            with:
+              python-version: 3.x
+
+          - name: Install dependencies
+            run: |
+              python -m pip install --upgrade pip
+              pip install pyinstaller
+
+          - name: Build executable
+            run: |
+              pyinstaller --onefile --noconsole --icon=squat-icon.ico squats.py
+
+          - name: Upload artifact
+            uses: actions/upload-artifact@v4
+            with:
+              name: squats-executable
+              path: dist/squats.exe
