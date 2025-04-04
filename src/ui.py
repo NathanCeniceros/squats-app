@@ -4,6 +4,9 @@ from tkcalendar import Calendar  # Add tkcalendar for calendar widget
 from src.tracker import time_slots, tracker_data, mark_as_completed, update_progress, initialize_tracker
 from datetime import datetime
 
+progress_label = None  # Declare globally for testing
+current_time_label = None  # Declare globally for testing
+
 def update_calendar(selected_date=None):
     date = selected_date or datetime.now().strftime("%Y-%m-%d")
     if date not in tracker_data:

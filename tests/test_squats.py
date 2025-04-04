@@ -69,10 +69,7 @@ class TestSquatsApp(unittest.TestCase):
     def test_mark_as_completed(self):
         initialize_tracker()
         test_date = datetime.now().strftime("%Y-%m-%d")
-        
-        if test_date not in tracker_data:
-            tracker_data[test_date] = [False] * len(time_slots)
-        
+        tracker_data[test_date] = [False] * len(time_slots)  # Ensure tracker_data is initialized
         mark_as_completed(test_date, 0)
         self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
 
@@ -94,16 +91,20 @@ class TestSquatsApp(unittest.TestCase):
             self.fail(f"build_main_screen() raised an exception: {e}")
 
     @timeout(5)
+    @patch("src.ui.progress_label", create=True)  # Mock GUI component
     @patch("src.ui.progress_bar", create=True)  # Mock GUI component
-    def test_update_calendar(self, mock_progress_bar):
+    def test_update_calendar(self, mock_progress_bar, mock_progress_label):
         initialize_tracker()
+        mock_progress_label.config = lambda **kwargs: None  # Mock config method
         mock_progress_bar.__setitem__ = lambda key, value: None  # Mock progress_bar["value"]
         update_calendar()
         self.assertTrue(True)  # Placeholder for actual verification logic
 
     @timeout(5)
+    @patch("src.ui.current_time_label", create=True)  # Mock GUI component
     @patch("src.ui.root", create=True)  # Mock GUI component
-    def test_update_current_time(self, mock_root):
+    def test_update_current_time(self, mock_root, mock_current_time_label):
+        mock_current_time_label.config = lambda **kwargs: None  # Mock config method
         mock_root.after = lambda delay, func: None  # Mock root.after
         update_current_time()
         self.assertTrue(True)  # Placeholder for actual verification logic
