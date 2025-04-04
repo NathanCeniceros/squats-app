@@ -15,6 +15,15 @@ def initialize_tracker():
         (start_of_week + timedelta(days=i)).strftime("%Y-%m-%d"): [False] * len(time_slots)
         for i in range(7)
     }
+def log_message(message):
+    """
+    Logs a message to the log file with a timestamp.
+    """
+    with open(LOG_FILE, "a") as log:
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log.write(f"{timestamp}: {message}\n")
+
+# Modify mark_as_completed to use log_message
 
 def update_progress(date, slot_index):
     """
