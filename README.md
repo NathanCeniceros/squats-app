@@ -6,6 +6,10 @@ Here’s the README file presented in a simple, copyable format:
 
 # Squats Reminder App 🏋️‍♀️
 
+## New Features
+- **Snooze Reminders**: Users can now snooze reminders for 5 minutes.
+- **Improved Error Handling**: The app gracefully handles missing or corrupted tracker files.
+
 ## Overview
 The **Squats Reminder App** is a dynamic fitness tool designed to keep you active throughout your day by providing periodic reminders to perform squats. It tracks your progress and motivates you with encouraging messages as you complete each set. Whether you're working, studying, or relaxing, this app ensures you stay active and engaged in your fitness routine.
 

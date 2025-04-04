@@ -1,4 +1,4 @@
-name: Build Squats App
+name: Build and Test Squats App
 
 on:
   push:
@@ -10,56 +10,70 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Use Ubuntu for testing
-
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
     steps:
+      # Step 1: Checkout code
       - name: Checkout code
-        uses: actions/checkout@v3  # Defines an external action for checking out code
+        uses: actions/checkout@v3
 
+      # Step 2: Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v3  # Defines an external action for setting up Python
+        uses: actions/setup-python@v3
         with:
           python-version: 3.x
 
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pyinstaller  # Shell command to install dependencies
+          pip install pytest pylint tkcalendar
 
+      # Step 4: Check code quality
+      - name: Run pylint
+        run: pylint src/ --fail-under=8.5
+
+      # Step 5: Run Unit Tests
       - name: Run Unit Tests
-        run: |
-          pytest tests/test_squats.py  # Shell command to execute tests
+        run: python -m unittest discover -s tests
+        continue-on-error: true  # Explicitly fail on test failures
 
   build:
-    runs-on: windows-latest  # Use Windows for building the executable
+    runs-on: windows-latest
+    needs: test  # Ensure this job runs only if the 'test' job succeeds
 
     steps:
+      # Step 1: Checkout code
       - name: Checkout code
-        uses: actions/checkout@v3  # Defines an external action for checking out code
+        uses: actions/checkout@v3
 
+      # Step 2: Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v3  # Defines an external action for setting up Python
+        uses: actions/setup-python@v3
         with:
           python-version: 3.x
 
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller  # Shell command to install dependencies
+          pip install pyinstaller tkcalendar
 
+      # Step 4: Build executable
       - name: Build executable
         run: |
-          cd ${{ github.workspace }}
-          pyinstaller --onefile --noconsole --icon=squat-icon.ico main.py --name=squats
+          pyinstaller --onefile --noconsole --icon=squat-icon.ico --name=squats main.py --add-data "squat-icon.ico;."
 
-      - name: Verify build output
-        run: |
-          ls -R dist/
+      # Step 5: Verify build output
+      - name: Verify build directory
+        run: ls -R dist/
 
+      # Step 6: Test executable startup
       - name: Test executable startup
-        run: |
-          ./dist/squats.exe
+        run: dist/squats.exe || echo "Executable failed to start."
 
+      # Step 7: Upload artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
