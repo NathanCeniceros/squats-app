@@ -64,6 +64,7 @@ def mark_as_completed(date, slot_index):
     """
     Toggles the completion status of a specific time slot for the given date.
     """
+    global tracker_data  # Ensure global tracker_data is used
     if date not in tracker_data:
         print(f"Date {date} not found in tracker data. Initializing data for this date.")
         tracker_data[date] = [False] * len(time_slots)  # Initialize data for the date
