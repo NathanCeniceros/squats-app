@@ -4,8 +4,12 @@ from tkinter import ttk
 import random
 from src.tracker import update_progress
 
-def schedule_next_reminder(delay):
-    threading.Timer(delay, popup).start()
+def schedule_next_reminder(delay, mock_timer=None):
+    """
+    Schedules the next reminder after a specified delay.
+    """
+    timer = mock_timer or threading.Timer
+    timer(delay, popup).start()
 
 def popup():
     reminder_window = tk.Tk()

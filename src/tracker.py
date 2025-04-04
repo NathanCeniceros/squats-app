@@ -77,10 +77,10 @@ def mark_as_completed(date, slot_index):
 
     if tracker_data[date][slot_index]:  # Undo completion
         tracker_data[date][slot_index] = False
-        log_message(f"User undid squats for {time_slots[slot_index]}.")
+        log_message(f"User undid squats for {time_slots[slot_index]} on {date}.")
     else:  # Mark as completed
         tracker_data[date][slot_index] = True
-        log_message(f"User completed squats for {time_slots[slot_index]}.")
+        log_message(f"User completed squats for {time_slots[slot_index]} on {date}.")
 
     save_tracker()  # Save changes to the tracker file
 

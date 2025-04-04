@@ -144,6 +144,14 @@ class TestSquatsApp(unittest.TestCase):
         schedule_next_reminder(5)
         mock_schedule.assert_called_once_with(5)  # Verify reminder is scheduled with correct delay
 
+    @timeout(5)
+    @patch("src.reminders.threading.Timer", autospec=True)
+    def test_schedule_next_reminder_logic(self, mock_timer):
+        mock_timer_instance = mock_timer.return_value
+        schedule_next_reminder(5, mock_timer=mock_timer)
+        mock_timer.assert_called_once_with(5, popup)  # Verify timer is initialized with correct delay and function
+        mock_timer_instance.start.assert_called_once()  # Verify timer is started
+
 
 if __name__ == "__main__":
     unittest.main()
