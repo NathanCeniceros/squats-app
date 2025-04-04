@@ -67,6 +67,9 @@ def mark_as_completed(date, slot_index, completed=True):
     """
     global tracker_data
 
+    # Reload tracker data to ensure consistency
+    load_tracker()
+
     # Ensure the date exists in tracker_data
     if date not in tracker_data:
         tracker_data[date] = [False] * len(time_slots)

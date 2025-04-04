@@ -69,9 +69,11 @@ class TestSquatsApp(unittest.TestCase):
             self.fail(f"load_tracker() raised an exception: {e}")
 
     @timeout(5)
-    def test_mark_as_completed(self):
+    @patch("src.tracker.load_tracker", autospec=True)
+    @patch("src.tracker.save_tracker", autospec=True)
+    def test_mark_as_completed(self, mock_save_tracker, mock_load_tracker):
         test_date = "2025-04-04"
-        initialize_tracker()  # Ensure tracker_data is initialized
+        tracker_data[test_date] = [False, False, False]  # Mock tracker data
 
         # Mark the first slot as completed
         mark_as_completed(test_date, 0, completed=True)
@@ -87,6 +89,9 @@ class TestSquatsApp(unittest.TestCase):
 
         # Validate that other slots remain unaffected
         self.assertFalse(tracker_data[test_date][2], "Slot 2 should remain not completed.")
+
+        # Ensure save_tracker is called after each update
+        self.assertEqual(mock_save_tracker.call_count, 3, "save_tracker should be called after each update.")
 
     @timeout(5)
     def test_save_tracker_content(self):
