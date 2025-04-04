@@ -94,17 +94,17 @@ class TestSquatsApp(unittest.TestCase):
             self.fail(f"build_main_screen() raised an exception: {e}")
 
     @timeout(5)
-    @patch("src.ui.progress_label", create=True)  # Mock GUI component
-    def test_update_calendar(self, mock_progress_label):
+    @patch("src.ui.progress_bar", create=True)  # Mock GUI component
+    def test_update_calendar(self, mock_progress_bar):
         initialize_tracker()
-        mock_progress_label.config = lambda text: None  # Mock config method
+        mock_progress_bar.__setitem__ = lambda key, value: None  # Mock progress_bar["value"]
         update_calendar()
         self.assertTrue(True)  # Placeholder for actual verification logic
 
     @timeout(5)
-    @patch("src.ui.current_time_label", create=True)  # Mock GUI component
-    def test_update_current_time(self, mock_current_time_label):
-        mock_current_time_label.config = lambda text: None  # Mock config method
+    @patch("src.ui.root", create=True)  # Mock GUI component
+    def test_update_current_time(self, mock_root):
+        mock_root.after = lambda delay, func: None  # Mock root.after
         update_current_time()
         self.assertTrue(True)  # Placeholder for actual verification logic
 
