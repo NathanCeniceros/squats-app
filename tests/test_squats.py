@@ -75,12 +75,16 @@ class TestSquatsApp(unittest.TestCase):
         tracker_data[test_date] = [False, False, False]  # Mock tracker data
 
         # Mark the first slot as completed
-        mark_as_completed(test_date, 0)
+        mark_as_completed(test_date, 0, completed=True)
         self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
 
-        # Toggle the first slot back to not completed
-        mark_as_completed(test_date, 0)
-        self.assertFalse(tracker_data[test_date][0])  # Assert slot is toggled back
+        # Mark the first slot as not completed
+        mark_as_completed(test_date, 0, completed=False)
+        self.assertFalse(tracker_data[test_date][0])  # Assert slot is marked not completed
+
+        # Mark the second slot as completed
+        mark_as_completed(test_date, 1, completed=True)
+        self.assertTrue(tracker_data[test_date][1])  # Assert second slot is marked completed
 
     @timeout(5)
     def test_save_tracker_content(self):
@@ -209,12 +213,16 @@ class TestSquatsApp(unittest.TestCase):
         tracker_data[test_date] = [False, False, False]  # Mock tracker data
 
         # Mark the first slot as completed
-        mark_as_completed(test_date, 0)
+        mark_as_completed(test_date, 0, completed=True)
         self.assertTrue(tracker_data[test_date][0])  # Assert slot is marked completed
 
-        # Toggle the first slot back to not completed
-        mark_as_completed(test_date, 0)
-        self.assertFalse(tracker_data[test_date][0])  # Assert slot is toggled back
+        # Mark the first slot as not completed
+        mark_as_completed(test_date, 0, completed=False)
+        self.assertFalse(tracker_data[test_date][0])  # Assert slot is marked not completed
+
+        # Mark the second slot as completed
+        mark_as_completed(test_date, 1, completed=True)
+        self.assertTrue(tracker_data[test_date][1])  # Assert second slot is marked completed
 
     @patch("src.ui.ttk.Style", create=True)
     @patch("src.ui.time_slots_frame", create=True)

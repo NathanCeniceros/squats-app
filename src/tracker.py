@@ -60,27 +60,31 @@ def update_progress(date, slot_index):
     save_tracker()
 
 # Function to toggle completion status for a time slot
-def mark_as_completed(date, slot_index):
+def mark_as_completed(date, slot_index, completed=True):
     """
-    Toggles the completion status of a specific time slot for the given date.
+    Marks a specific time slot as completed or not completed for the given date.
+    If the date is not in the tracker data, it initializes the data for that date.
     """
     global tracker_data
+
+    # Ensure the date exists in tracker_data
     if date not in tracker_data:
         print(f"Date {date} not found in tracker data. Initializing data for this date.")
-        tracker_data[date] = [False] * len(time_slots)  # Initialize data for the date
+        tracker_data[date] = [False] * len(time_slots)
 
+    # Validate the slot index
     if not (0 <= slot_index < len(time_slots)):
         print(f"Error: Slot index {slot_index} is out of range.")
         return
 
-    print(f"Before toggle: {tracker_data[date]}")  # Log state before toggle
-    tracker_data[date][slot_index] = not tracker_data[date][slot_index]  # Toggle completion status
-    print(f"After toggle: {tracker_data[date]}")  # Log state after toggle
+    # Update the completion status
+    tracker_data[date][slot_index] = completed
+    action = "completed" if completed else "not completed"
+    log_message(f"User marked slot {slot_index} on {date} as {action}.")
 
-    action = "completed" if tracker_data[date][slot_index] else "undid"
-    log_message(f"User {action} squats for {time_slots[slot_index]} on {date}.")
-
-    save_tracker()  # Save changes to the tracker file
+    # Save the updated tracker data
+    save_tracker()
+    print(f"Updated tracker data for {date}: {tracker_data[date]}")
 
 # Function to save tracker data to a JSON file
 def save_tracker():
