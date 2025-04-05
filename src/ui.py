@@ -60,6 +60,19 @@ def update_calendar(date, progress_label, status_label, progress_bar, root=None)
             elif any(slots):
                 CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "incomplete")
                 CALENDAR.tag_config("incomplete", background="red", foreground="white")
+            else:
+                CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "missed")
+                CALENDAR.tag_config("missed", background="red", foreground="white")
+
+        # Highlight the current time slot with a blue hourglass
+        today = datetime.now().strftime("%Y-%m-%d")
+        if date == today:
+            current_time = datetime.now()
+            for index, slot in enumerate(time_slots):
+                slot_time = datetime.strptime(slot, "%I:%M %p")
+                if slot_time.hour == current_time.hour and slot_time.minute == current_time.minute:
+                    CALENDAR.calevent_create(current_time, "", "current")
+                    CALENDAR.tag_config("current", background="blue", foreground="white")
 
     if root:
         root.after(0, update_ui)
@@ -180,33 +193,32 @@ def change_calendar_view(*args):
         # Show progress for the selected day
         update_calendar(selected_date.strftime("%Y-%m-%d"), PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
         update_time_slots_list(selected_date.strftime("%Y-%m-%d"))
-        messagebox.showinfo("Day View", f"Displaying progress for {selected_date.strftime('%Y-%m-%d')}")
 
     elif view_mode == "week":
         # Calculate the start and end of the week
         start_of_week = selected_date - timedelta(days=selected_date.weekday())
         end_of_week = start_of_week + timedelta(days=6)
-        week_progress = calculate_progress_for_range(start_of_week, end_of_week)
-        display_progress_summary(week_progress, "Week View", f"{start_of_week.strftime('%Y-%m-%d')} to {end_of_week.strftime('%Y-%m-%d')}")
+        for current_date in (start_of_week + timedelta(days=i) for i in range(7)):
+            update_calendar(current_date.strftime("%Y-%m-%d"), PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
 
     elif view_mode == "month":
-        # Calculate the start and end of the month
+        # Keep the existing behavior for month view
         start_of_month = selected_date.replace(day=1)
         next_month = (start_of_month + timedelta(days=31)).replace(day=1)
         end_of_month = next_month - timedelta(days=1)
-        month_progress = calculate_progress_for_range(start_of_month, end_of_month)
-        display_progress_summary(month_progress, "Month View", f"{start_of_month.strftime('%B %Y')}")
+        for current_date in (start_of_month + timedelta(days=i) for i in range((end_of_month - start_of_month).days + 1)):
+            update_calendar(current_date.strftime("%Y-%m-%d"), PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
 
     elif view_mode == "year":
-        # Calculate the start and end of the year
+        # Keep the existing behavior for year view
         start_of_year = selected_date.replace(month=1, day=1)
         end_of_year = selected_date.replace(month=12, day=31)
-        year_progress = calculate_progress_for_range(start_of_year, end_of_year)
-        display_progress_summary(year_progress, "Year View", f"{start_of_year.year}")
+        for current_date in (start_of_year + timedelta(days=i) for i in range((end_of_year - start_of_year).days + 1)):
+            update_calendar(current_date.strftime("%Y-%m-%d"), PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
 
     else:
-        messagebox.showerror("Error", f"Unknown view mode: {view_mode}")
         print(f"Error: Unknown view mode {view_mode}")
+
 
 def calculate_progress_for_range(start_date, end_date):
     """
