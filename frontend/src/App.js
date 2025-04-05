@@ -9,7 +9,7 @@ function App() {
   const [timeSlots, setTimeSlots] = useState([]);
 
   useEffect(() => {
-    fetch(`/api/progress/${date.toISOString().split('T')[0]}`)
+    fetch(`https://your-backend-url.com/api/progress/${date.toISOString().split('T')[0]}`)
       .then((response) => response.json())
       .then((data) => setProgress(data));
   }, [date]);
