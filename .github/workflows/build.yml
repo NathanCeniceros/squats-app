@@ -58,10 +58,3 @@ jobs:
       run: |
         echo "Checking contents of dist/SquatsApp..."
         ls -R dist/SquatsApp
-
-    # Upload the packaged executable as an artifact
-    - name: Upload executable
-      uses: actions/upload-artifact@v3
-      with:
-        name: SquatsApp
-        path: dist/SquatsApp/**
