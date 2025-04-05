@@ -31,9 +31,14 @@ def update_calendar(date, progress_label, status_label, progress_bar, root=None)
     Update the calendar UI with the progress for the given date.
     """
     if date not in tracker.tracker_data:
-        progress_label.config(text="No data available for this date.")
-        progress_bar.config(value=0)
-        status_label.config(text="No progress yet.", foreground="#333")
+        def no_data_ui_update():
+            progress_label.config(text="No data available for this date.")
+            progress_bar.config(value=0)
+            status_label.config(text="No progress yet.", foreground="#333")
+        if root:
+            root.after(0, no_data_ui_update)
+        else:
+            no_data_ui_update()
         return
 
     completed_count = sum(1 for completed in tracker.tracker_data[date] if completed)
@@ -54,15 +59,11 @@ def update_calendar(date, progress_label, status_label, progress_bar, root=None)
 
         # Update calendar colors for previous days
         for day, slots in tracker.tracker_data.items():
-            if all(slots):
-                CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "completed")
-                CALENDAR.tag_config("completed", background="green", foreground="white")
-            elif any(slots):
-                CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "incomplete")
-                CALENDAR.tag_config("incomplete", background="red", foreground="white")
-            else:
-                CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "missed")
-                CALENDAR.tag_config("missed", background="red", foreground="white")
+            def update_calendar_events(day=day, slots=slots):
+                if root:
+                    root.after(0, lambda: _update_calendar_event(day, slots))
+                else:
+                    _update_calendar_event(day, slots)
 
         # Highlight the current time slot with a blue hourglass
         today = datetime.now().strftime("%Y-%m-%d")
@@ -71,13 +72,34 @@ def update_calendar(date, progress_label, status_label, progress_bar, root=None)
             for index, slot in enumerate(time_slots):
                 slot_time = datetime.strptime(slot, "%I:%M %p")
                 if slot_time.hour == current_time.hour and slot_time.minute == current_time.minute:
-                    CALENDAR.calevent_create(current_time, "", "current")
-                    CALENDAR.tag_config("current", background="blue", foreground="white")
+                    def highlight_current_slot():
+                        if root:
+                            root.after(0, lambda: CALENDAR.calevent_create(current_time, "", "current"))
+                            root.after(0, lambda: CALENDAR.tag_config("current", background="blue", foreground="white"))
+                        else:
+                            CALENDAR.calevent_create(current_time, "", "current")
+                            CALENDAR.tag_config("current", background="blue", foreground="white")
+                    highlight_current_slot()
 
     if root:
-        root.after(0, update_ui)
+        root.after(0, update_ui)  # Schedule UI updates on the main thread
     else:
         update_ui()
+
+
+def _update_calendar_event(day, slots):
+    """
+    Helper function to update calendar events for a specific day.
+    """
+    if all(slots):
+        CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "completed")
+        CALENDAR.tag_config("completed", background="green", foreground="white")
+    elif any(slots):
+        CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "incomplete")
+        CALENDAR.tag_config("incomplete", background="red", foreground="white")
+    else:
+        CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "missed")
+        CALENDAR.tag_config("missed", background="red", foreground="white")
 
 
 def update_current_time():
