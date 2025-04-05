@@ -59,11 +59,10 @@ def update_calendar(date, progress_label, status_label, progress_bar, root=None)
 
         # Update calendar colors for previous days
         for day, slots in tracker.tracker_data.items():
-            def update_calendar_events(day=day, slots=slots):
-                if root:
-                    root.after(0, lambda: _update_calendar_event(day, slots))
-                else:
-                    _update_calendar_event(day, slots)
+            if root:
+                root.after(0, lambda d=day, s=slots: _update_calendar_event(d, s, root))
+            else:
+                _update_calendar_event(day, slots, root)
 
         # Highlight the current time slot with a blue hourglass
         today = datetime.now().strftime("%Y-%m-%d")
@@ -87,19 +86,32 @@ def update_calendar(date, progress_label, status_label, progress_bar, root=None)
         update_ui()
 
 
-def _update_calendar_event(day, slots):
+def _update_calendar_event(day, slots, root=None):
     """
     Helper function to update calendar events for a specific day.
     """
-    if all(slots):
-        CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "completed")
-        CALENDAR.tag_config("completed", background="green", foreground="white")
-    elif any(slots):
-        CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "incomplete")
-        CALENDAR.tag_config("incomplete", background="red", foreground="white")
+    def update_event():
+        if not CALENDAR:
+            print(f"Warning: CALENDAR is not initialized. Skipping update for {day}.")
+            return
+
+        if all(slots):
+            CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "completed")
+            CALENDAR.tag_config("completed", background="green", foreground="white")
+        elif any(slots):
+            CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "incomplete")
+            CALENDAR.tag_config("incomplete", background="red", foreground="white")
+        else:
+            CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "missed")
+            CALENDAR.tag_config("missed", background="red", foreground="white")
+
+    if threading.current_thread() != threading.main_thread():
+        if root:
+            root.after(0, update_event)  # Schedule on the main thread
+        else:
+            print(f"Warning: ROOT is not initialized. Skipping update for {day}.")
     else:
-        CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "missed")
-        CALENDAR.tag_config("missed", background="red", foreground="white")
+        update_event()
 
 
 def update_current_time():
@@ -189,6 +201,12 @@ def mark_squat_as_completed(date, slot_index):
     # Check if all squats for the day are completed
     if all(tracker.tracker_data[date]):
         show_congratulatory_message(STATUS_LABEL)  # Update banner with congratulatory message
+    else:
+        # Briefly show a congratulatory message for the individual time slot
+        if tracker.tracker_data[date][slot_index]:  # If the slot was marked as completed
+            original_text = STATUS_LABEL.cget("text")  # Save the original status text
+            STATUS_LABEL.config(text="Great job! Keep going!", foreground="#006600")
+            ROOT.after(2000, lambda: STATUS_LABEL.config(text=original_text, foreground="#333"))  # Revert after 2 seconds
 
     status = "completed" if tracker.tracker_data[date][slot_index] else "not completed"
     print(f"Time slot {time_slots[slot_index]} marked as {status}.")
@@ -258,6 +276,7 @@ def calculate_progress_for_range(start_date, end_date):
         current_date += timedelta(days=1)
     return progress
 
+
 def display_progress_summary(progress, title, date_range):
     """
     Displays a summary of progress for a given range.
@@ -308,6 +327,27 @@ def notify_missed_slots(date):
         messagebox.showwarning("Missed Slots", f"You missed the following slots: {', '.join(missed_slots)}")
 
 
+def ensure_root_initialized():
+    """
+    Ensure that ROOT is initialized before performing any Tkinter operations.
+    """
+    if ROOT is None:
+        raise RuntimeError("ROOT is not initialized. Call build_main_screen first.")
+
+
+def safe_exit():
+    """
+    Save progress and exit the application gracefully.
+    """
+    try:
+        save_progress()
+    except Exception as e:
+        print(f"Error saving progress: {e}")
+    finally:
+        if ROOT:
+            ROOT.destroy()
+
+
 def build_main_screen():
     """
     Builds the main screen for the squats tracker application.
@@ -326,7 +366,6 @@ def build_main_screen():
 
     # Initialize VIEW_MODE after ROOT is created
     VIEW_MODE = tk.StringVar(value="day")  # Default calendar view mode
-
     title_label = ttk.Label(
         ROOT, text="Daily Squats Progress", font=("Helvetica", 16, "bold"), foreground="#333"
     )
@@ -368,7 +407,7 @@ def build_main_screen():
     update_time_slots_list(today)
     update_current_time()
     load_progress()  # Load progress on startup
-    ROOT.protocol("WM_DELETE_WINDOW", lambda: (save_progress(), ROOT.destroy()))  # Save on exit
+    ROOT.protocol("WM_DELETE_WINDOW", safe_exit)  # Use safe_exit for graceful shutdown
     VIEW_MODE.trace_add("write", change_calendar_view)  # Trigger view change on dropdown selection
     return ROOT
 
@@ -382,6 +421,6 @@ def schedule_next_reminder(delay_minutes, mock_status_label=None):
     threading.Timer(delay_minutes * 60, lambda: print("Reminder triggered!")).start()
 
     # Update the status label if provided
-    if status:
+    if mock_status_label:
         status = mock_status_label or STATUS_LABEL  # Use mock_status_label if provided
         status.config(text="Way to go! You completed your squats for today!", foreground="#006600")
