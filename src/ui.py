@@ -117,13 +117,20 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
         if slot_completed:
             status = "✔"
             button_style = "Completed.TButton"
-        elif (slot_hour < current_hour) or (slot_hour == current_hour and slot_minute < current_minute):
+        elif date < today:  # For previous days, mark all missed slots
             status = "✗"
             button_style = "Missed.TButton"
-        elif date == today and slot_hour == current_hour and slot_minute == current_minute:
-            button_style = "Current.TButton"
-            status = "⏳"
-        else:
+        elif date == today:  # For today, check the current time
+            if (slot_hour < current_hour) or (slot_hour == current_hour and slot_minute < current_minute):
+                status = "✗"
+                button_style = "Missed.TButton"
+            elif slot_hour == current_hour and slot_minute == current_minute:
+                button_style = "Current.TButton"
+                status = "⏳"
+            else:
+                status = ""
+                button_style = "TButton"
+        else:  # For future dates
             status = ""
             button_style = "TButton"
 
@@ -167,21 +174,71 @@ def change_calendar_view(*args):
     """
     view_mode = VIEW_MODE.get()
     selected_date = CALENDAR.selection_get()
+    today = datetime.now()
+
     if view_mode == "day":
-        CALENDAR.config(selectmode="day")
+        # Show progress for the selected day
+        update_calendar(selected_date.strftime("%Y-%m-%d"), PROGRESS_LABEL, STATUS_LABEL, PROGRESS_BAR, ROOT)
+        update_time_slots_list(selected_date.strftime("%Y-%m-%d"))
+        messagebox.showinfo("Day View", f"Displaying progress for {selected_date.strftime('%Y-%m-%d')}")
+
     elif view_mode == "week":
-        start_date = selected_date
-        end_date = start_date + timedelta(days=6)
-        messagebox.showinfo("Week View", f"Displaying week: {start_date} to {end_date}")
+        # Calculate the start and end of the week
+        start_of_week = selected_date - timedelta(days=selected_date.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+        week_progress = calculate_progress_for_range(start_of_week, end_of_week)
+        display_progress_summary(week_progress, "Week View", f"{start_of_week.strftime('%Y-%m-%d')} to {end_of_week.strftime('%Y-%m-%d')}")
+
     elif view_mode == "month":
-        CALENDAR.config(selectmode="day")  # TkCalendar does not support month view directly
-        messagebox.showinfo("Month View", f"Displaying month: {selected_date.strftime('%B %Y')}")
+        # Calculate the start and end of the month
+        start_of_month = selected_date.replace(day=1)
+        next_month = (start_of_month + timedelta(days=31)).replace(day=1)
+        end_of_month = next_month - timedelta(days=1)
+        month_progress = calculate_progress_for_range(start_of_month, end_of_month)
+        display_progress_summary(month_progress, "Month View", f"{start_of_month.strftime('%B %Y')}")
+
     elif view_mode == "year":
-        CALENDAR.config(selectmode="day")  # TkCalendar does not support year view directly
-        messagebox.showinfo("Year View", f"Displaying year: {selected_date.year}")
+        # Calculate the start and end of the year
+        start_of_year = selected_date.replace(month=1, day=1)
+        end_of_year = selected_date.replace(month=12, day=31)
+        year_progress = calculate_progress_for_range(start_of_year, end_of_year)
+        display_progress_summary(year_progress, "Year View", f"{start_of_year.year}")
+
     else:
         messagebox.showerror("Error", f"Unknown view mode: {view_mode}")
-    print(f"Changed calendar view to: {view_mode}")
+        print(f"Error: Unknown view mode {view_mode}")
+
+def calculate_progress_for_range(start_date, end_date):
+    """
+    Calculates progress for a range of dates.
+    """
+    progress = {}
+    current_date = start_date
+    while current_date <= end_date:
+        date_str = current_date.strftime("%Y-%m-%d")
+        if date_str in tracker.tracker_data:
+            completed_count = sum(1 for completed in tracker.tracker_data[date_str] if completed)
+            progress[date_str] = f"{completed_count}/{len(time_slots)}"
+        else:
+            progress[date_str] = "No data"
+        current_date += timedelta(days=1)
+    return progress
+
+def display_progress_summary(progress, title, date_range):
+    """
+    Displays a summary of progress for a given range.
+    """
+    summary_window = tk.Toplevel(ROOT)
+    summary_window.title(title)
+    summary_window.geometry("400x300")
+    summary_window.configure(bg="#f0f8ff")
+
+    title_label = ttk.Label(summary_window, text=f"{title}: {date_range}", font=("Helvetica", 14, "bold"))
+    title_label.pack(pady=10)
+
+    for date, progress_text in progress.items():
+        progress_label = ttk.Label(summary_window, text=f"{date}: {progress_text}", font=("Helvetica", 12))
+        progress_label.pack(anchor="w", padx=10, pady=2)
 
 
 def save_progress():
