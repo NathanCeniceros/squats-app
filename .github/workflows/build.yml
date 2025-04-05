@@ -55,7 +55,7 @@ jobs:
 
     # Upload the packaged executable as an artifact
     - name: Upload executable
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2  # Use version v2 instead of v3
       with:
         name: SquatsApp
         path: dist/SquatsApp
