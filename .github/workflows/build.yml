@@ -53,9 +53,14 @@ jobs:
       run: |
         pyinstaller launcher.spec
 
+    # Verify the packaged executable exists
+    - name: Verify executable
+      run: |
+        ls dist/SquatsApp
+
     # Upload the packaged executable as an artifact
     - name: Upload executable
-      uses: actions/upload-artifact@v3  # Explicitly use version v3
+      uses: actions/upload-artifact@v2
       with:
         name: SquatsApp
-        path: dist/SquatsApp
+        path: dist/SquatsApp/**
