@@ -94,14 +94,39 @@ def reset_popup_mock():
 
 def show_congratulatory_message(status_label=None):
     """
-    Displays a congratulatory message.
+    Displays a congratulatory message on the banner.
     """
     messages = [
-        "Way to go! You completed your squats for today!",
-        "Keep up the fantastic effort!",
-        "Your body thanks you for staying active!",
-        "Amazing! You're hitting your goals!",
-        "Fantastic progress—keep crushing it!",
+        "Your squats are shaping a masterpiece!",
+        "Your glutes are the envy of the fitness world!",
+        "You're building buns of steel!",
+        "Your dedication is sculpting perfection!",
+        "Your squats are a work of art!",
+        "You're squatting your way to greatness!",
+        "Your glutes deserve a standing ovation!",
+        "You're creating a masterpiece with every squat!",
+        "Your hard work is paying off beautifully!",
+        "Your squats are poetry in motion!",
+        "Your glutes are a testament to your effort!",
+        "You're building a foundation of strength!",
+        "Your squats are inspiring greatness!",
+        "Your glutes are a symbol of determination!",
+        "You're squatting your way to glory!",
+        "Your dedication is shaping excellence!",
+        "Your squats are a marvel to behold!",
+        "Your glutes are a masterpiece in progress!",
+        "You're creating a legacy with every squat!",
+        "Your hard work is shaping brilliance!",
+        "Your squats are a testament to your willpower!",
+        "Your glutes are a reflection of your effort!",
+        "You're building a monument to fitness!",
+        "Your squats are a celebration of strength!",
+        "Your glutes are a masterpiece of dedication!",
+        "You're squatting your way to perfection!",
+        "Your dedication is shaping greatness!",
+        "Your squats are a triumph of willpower!",
+        "Your glutes are a masterpiece of hard work!",
+        "You're creating a legacy of strength!"
     ]
 
     # Use the test message if set, otherwise pick a random one
@@ -109,28 +134,6 @@ def show_congratulatory_message(status_label=None):
 
     if status_label is not None:
         status_label.config(text=message, foreground="#006600")
-        return
-
-    congrats_window = tk.Tk()
-    congrats_window.title("Good Job!")
-    congrats_window.geometry("300x150")
-    congrats_window.configure(bg="#e0ffe0")
-
-    label = ttk.Label(
-        congrats_window,
-        text=message,
-        font=("Helvetica", 14, "bold"),
-        foreground="#006600",
-        wraplength=250,
-    )
-    label.pack(pady=20)
-
-    ok_button = ttk.Button(
-        congrats_window, text="OK", command=congrats_window.destroy
-    )
-    ok_button.pack(pady=10)
-
-    congrats_window.mainloop()
 
 
 def set_test_congratulatory_message(message):
