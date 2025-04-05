@@ -94,7 +94,7 @@ def reset_popup_mock():
 
 def show_congratulatory_message(status_label=None):
     """
-    Displays a congratulatory message.
+    Displays a congratulatory message on the banner.
     """
     messages = [
         "Way to go! You completed your squats for today!",
@@ -109,28 +109,6 @@ def show_congratulatory_message(status_label=None):
 
     if status_label is not None:
         status_label.config(text=message, foreground="#006600")
-        return
-
-    congrats_window = tk.Tk()
-    congrats_window.title("Good Job!")
-    congrats_window.geometry("300x150")
-    congrats_window.configure(bg="#e0ffe0")
-
-    label = ttk.Label(
-        congrats_window,
-        text=message,
-        font=("Helvetica", 14, "bold"),
-        foreground="#006600",
-        wraplength=250,
-    )
-    label.pack(pady=20)
-
-    ok_button = ttk.Button(
-        congrats_window, text="OK", command=congrats_window.destroy
-    )
-    ok_button.pack(pady=10)
-
-    congrats_window.mainloop()
 
 
 def set_test_congratulatory_message(message):

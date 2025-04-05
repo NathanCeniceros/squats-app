@@ -52,6 +52,15 @@ def update_calendar(date, progress_label, status_label, progress_bar, root=None)
         status_label.config(text=status_text, foreground=status_color)
         progress_bar.config(value=progress_percentage)
 
+        # Update calendar colors for previous days
+        for day, slots in tracker.tracker_data.items():
+            if all(slots):
+                CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "completed")
+                CALENDAR.tag_config("completed", background="green", foreground="white")
+            elif any(slots):
+                CALENDAR.calevent_create(datetime.strptime(day, "%Y-%m-%d"), "", "incomplete")
+                CALENDAR.tag_config("incomplete", background="red", foreground="white")
+
     if root:
         root.after(0, update_ui)
     else:
@@ -114,8 +123,12 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
             button_style = "TButton"
 
         if slot_hour == current_hour and current_minute >= slot_minute:
-            button_style = "Current.TButton"
-            status = "⏳"
+            if slot_completed:
+                button_style = "Completed.TButton"  # Turn green if completed
+                status = "✔"
+            else:
+                button_style = "Current.TButton"
+                status = "⏳"
 
         button = ttk.Button(
             frame,
@@ -136,10 +149,10 @@ def mark_squat_as_completed(date, slot_index):
 
     # Check if all squats for the day are completed
     if all(tracker.tracker_data[date]):
-        show_congratulatory_message(STATUS_LABEL)  # Show congratulatory message
+        show_congratulatory_message(STATUS_LABEL)  # Update banner with congratulatory message
 
     status = "completed" if tracker.tracker_data[date][slot_index] else "not completed"
-    messagebox.showinfo("Status Updated", f"Time slot {time_slots[slot_index]} marked as {status}.")
+    print(f"Time slot {time_slots[slot_index]} marked as {status}.")
 
 
 def on_date_selected(event):
