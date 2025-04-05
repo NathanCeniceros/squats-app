@@ -3,7 +3,7 @@ Module for handling the user interface of the squats app.
 """
 
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 import tkinter as tk
 from tkinter import ttk, messagebox
 from tkcalendar import Calendar
@@ -106,6 +106,8 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
     for widget in frame.winfo_children():
         widget.destroy()
 
+    today = datetime.now().strftime("%Y-%m-%d")  # Get today's date as a string
+
     for index, slot_completed in enumerate(tracker.tracker_data[date]):
         slot = time_slots[index]
         slot_time = datetime.strptime(slot, "%I:%M %p")
@@ -115,20 +117,15 @@ def update_time_slots_list(date, mock_style=None, mock_time_slots_frame=None):
         if slot_completed:
             status = "✔"
             button_style = "Completed.TButton"
-        elif (slot_hour < current_hour) or (slot_hour == current_hour and slot_minute <= current_minute):
+        elif (slot_hour < current_hour) or (slot_hour == current_hour and slot_minute < current_minute):
             status = "✗"
             button_style = "Missed.TButton"
+        elif date == today and slot_hour == current_hour and slot_minute == current_minute:
+            button_style = "Current.TButton"
+            status = "⏳"
         else:
             status = ""
             button_style = "TButton"
-
-        if slot_hour == current_hour and current_minute >= slot_minute:
-            if slot_completed:
-                button_style = "Completed.TButton"  # Turn green if completed
-                status = "✔"
-            else:
-                button_style = "Current.TButton"
-                status = "⏳"
 
         button = ttk.Button(
             frame,
@@ -164,22 +161,23 @@ def on_date_selected(event):
     update_time_slots_list(selected_date)
 
 
-def change_calendar_view():
+def change_calendar_view(*args):
     """
     Changes the calendar view mode based on the dropdown selection.
     """
     view_mode = VIEW_MODE.get()
+    selected_date = CALENDAR.selection_get()
     if view_mode == "day":
         CALENDAR.config(selectmode="day")
     elif view_mode == "week":
-        start_date = CALENDAR.selection_get()
+        start_date = selected_date
         end_date = start_date + timedelta(days=6)
         messagebox.showinfo("Week View", f"Displaying week: {start_date} to {end_date}")
     elif view_mode == "month":
-        selected_date = CALENDAR.selection_get()
+        CALENDAR.config(selectmode="day")  # TkCalendar does not support month view directly
         messagebox.showinfo("Month View", f"Displaying month: {selected_date.strftime('%B %Y')}")
     elif view_mode == "year":
-        selected_date = CALENDAR.selection_get()
+        CALENDAR.config(selectmode="day")  # TkCalendar does not support year view directly
         messagebox.showinfo("Year View", f"Displaying year: {selected_date.year}")
     else:
         messagebox.showerror("Error", f"Unknown view mode: {view_mode}")
@@ -280,6 +278,7 @@ def build_main_screen():
     update_current_time()
     load_progress()  # Load progress on startup
     ROOT.protocol("WM_DELETE_WINDOW", lambda: (save_progress(), ROOT.destroy()))  # Save on exit
+    VIEW_MODE.trace_add("write", change_calendar_view)  # Trigger view change on dropdown selection
     return ROOT
 
 
